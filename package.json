@@ -1,0 +1,32 @@
+{
+  "name": "clad",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio"
+  },
+  "dependencies": {
+    "nuxt": "^4.0.0",
+    "vue": "latest",
+    "drizzle-orm": "^0.40.0",
+    "@neondatabase/serverless": "^0.10.0",
+    "openai": "^4.0.0",
+    "better-auth": "^1.1.0",
+    "tailwindcss": "^4.0.0",
+    "@tailwindcss/vite": "^4.0.0"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.5",
+    "typescript": "^5.7.0",
+    "vue-tsc": "^2.0.0",
+    "vite": "^6.0.0"
+  }
+}
