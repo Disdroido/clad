@@ -1,4 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+import tailwindcss from '@tailwindcss/vite'
+
 export default defineNuxtConfig({
   compatibilityDate: '2025-01-01',
 
@@ -8,14 +10,24 @@ export default defineNuxtConfig({
 
   devtools: { enabled: true },
 
+  devServer: {
+    host: '0.0.0.0',
+  },
+
   modules: [],
 
-  css: ['~/assets/css/main.css'],
+  // CSS is imported in app.vue and processed by @tailwindcss/vite plugin
 
   vite: {
+    server: {
+      allowedHosts: 'all',
+    },
     css: {
       preprocessorOptions: {},
     },
+    plugins: [
+      tailwindcss(),
+    ],
   },
 
   runtimeConfig: {

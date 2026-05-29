@@ -1,0 +1,1 @@
+ALTER TABLE "wardrobe_items" ALTER COLUMN "is_favorite" SET DATA TYPE boolean;

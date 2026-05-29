@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1780030297063,
+      "tag": "0000_sharp_squadron_supreme",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1780030437379,
+      "tag": "0001_rare_ravenous",
+      "breakpoints": true
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, varchar, real, jsonb, pgEnum } from 'drizzle-orm/pg-core'
+import { pgTable, uuid, text, timestamp, varchar, real, jsonb, pgEnum, boolean } from 'drizzle-orm/pg-core'
 
 // Enums
 export const clothingTypeEnum = pgEnum('clothing_type', [
@@ -56,7 +56,7 @@ export const wardrobeItems = pgTable('wardrobe_items', {
   material: varchar('material', { length: 100 }),
   formalityLevel: formalityEnum('formality_level').default('casual'),
   season: seasonEnum('season').default('all_season'),
-  isFavorite: text('is_favorite').default('false'),
+  isFavorite: boolean('is_favorite').default(false),
   aiConfidence: real('ai_confidence'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })
