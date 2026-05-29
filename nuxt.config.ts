@@ -30,6 +30,11 @@ export default defineNuxtConfig({
     ],
   },
 
+  nitro: {
+    preset: 'cloudflare-pages',
+    compatibilityDate: '2025-01-01',
+  },
+
   runtimeConfig: {
     // Server-only (never exposed to client)
     openrouterApiKey: process.env.OPENROUTER_API_KEY,
