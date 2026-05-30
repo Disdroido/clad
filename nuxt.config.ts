@@ -41,9 +41,12 @@ export default defineNuxtConfig({
 
   nitro: {
     preset: 'cloudflare-pages',
-    // Bumped so Nitro generates a runtime compatible with nodejs_compat
-    // (required by better-auth and @neondatabase/serverless).
     compatibilityDate: '2025-09-01',
+    cloudflare: {
+      // Merge nodejs_compat + output dir into wrangler config at build time.
+      deployConfig: true,
+      nodeCompat: true,
+    },
   },
 
   runtimeConfig: {

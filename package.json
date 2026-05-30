@@ -24,6 +24,7 @@
     "openai": "^4.0.0",
     "tailwindcss": "^4.0.0",
     "vue": "latest",
+    "wrangler": "^4.95.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {

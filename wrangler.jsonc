@@ -1,11 +1,15 @@
 {
-  // Wrangler config for Cloudflare Pages. Nitro's cloudflare-pages preset
-  // reads this when building & deploying.
+  // Cloudflare Pages config. Wrangler reads this during deploy.
   //
-  // nodejs_compat is REQUIRED for better-auth (Buffer, process.env,
-  // createRequire) and the @neondatabase/serverless driver.
+  // pages_build_output_dir is REQUIRED — without it, `wrangler deploy` fails
+  // with "Missing entry-point to Worker script" because it doesn't know this
+  // is a Pages project with a pre-built output in dist/.
+  //
+  // nodejs_compat is REQUIRED for better-auth (Buffer, process.env) and
+  // @neondatabase/serverless.
   "$schema": "https://unpkg.com/wrangler/config-schema.json",
   "name": "clad",
+  "pages_build_output_dir": "./dist",
   "compatibility_date": "2025-09-01",
   "compatibility_flags": ["nodejs_compat"]
 }
