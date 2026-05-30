@@ -32,14 +32,18 @@ export default defineNuxtConfig({
       include: [
         '@vue/devtools-core',
         '@vue/devtools-kit',
-        'better-auth/vue'
-      ]
-    }
+      ],
+      // Better Auth ships dual CJS/ESM with createRequire calls that break
+      // when Vite tries to pre-bundle. Excluding fixes ESM/CJS interop.
+      exclude: ['better-auth', 'better-auth/vue'],
+    },
   },
 
   nitro: {
     preset: 'cloudflare-pages',
-    compatibilityDate: '2025-01-01',
+    // Bumped so Nitro generates a runtime compatible with nodejs_compat
+    // (required by better-auth and @neondatabase/serverless).
+    compatibilityDate: '2025-09-01',
   },
 
   runtimeConfig: {

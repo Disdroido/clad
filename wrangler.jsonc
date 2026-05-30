@@ -1,0 +1,11 @@
+{
+  // Wrangler config for Cloudflare Pages. Nitro's cloudflare-pages preset
+  // reads this when building & deploying.
+  //
+  // nodejs_compat is REQUIRED for better-auth (Buffer, process.env,
+  // createRequire) and the @neondatabase/serverless driver.
+  "$schema": "https://unpkg.com/wrangler/config-schema.json",
+  "name": "clad",
+  "compatibility_date": "2025-09-01",
+  "compatibility_flags": ["nodejs_compat"]
+}
