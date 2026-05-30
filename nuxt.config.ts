@@ -40,9 +40,10 @@ export default defineNuxtConfig({
   },
 
   nitro: {
-    // Workers + Assets preset (required for `wrangler deploy`).
-    // cloudflare-pages outputs to dist/ for `wrangler pages deploy` only.
-    preset: 'cloudflare',
+    // ES module worker format — required for nodejs_compat (node:buffer, etc.).
+    // The legacy `cloudflare` preset uses service-worker syntax and fails
+    // validation with Better Auth / Drizzle deps.
+    preset: 'cloudflare-module',
     compatibilityDate: '2025-09-01',
     cloudflare: {
       deployConfig: true,

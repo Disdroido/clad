@@ -1,6 +1,7 @@
 # Nuxt
 .nuxt
 .output
+.wrangler
 .data
 .nuxt-types
 node_modules
