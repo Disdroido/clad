@@ -16,11 +16,11 @@ import { RuntimeConfig as UserRuntimeConfig, PublicRuntimeConfig as UserPublicRu
 
    r2AccountId: string,
 
-   r2AccessKeyId: string,
-
-   r2SecretAccessKey: string,
+   r2ApiToken: string,
 
    r2BucketName: string,
+
+   r2PublicUrl: string,
 
    authSecret: string,
 

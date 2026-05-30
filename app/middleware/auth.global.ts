@@ -1,11 +1,13 @@
+import { authClient } from '~/lib/auth-client'
+
+const PUBLIC_ROUTES = new Set(['/', '/login', '/signup'])
+
 export default defineNuxtRouteMiddleware(async (to) => {
-  // Public routes that don't require auth
-  const publicRoutes = ['/', '/login']
-  if (publicRoutes.includes(to.path)) return
+  if (PUBLIC_ROUTES.has(to.path)) return
 
-  // TODO: Check auth session via better-auth
-  // const session = await auth.api.getSession({ headers: event.headers })
-  // if (!session) return navigateTo('/login')
-
-  // For now, allow all routes (full auth implementation in Week 2)
+  // useFetch forwards cookies during SSR and caches the result for hydration.
+  const { data: session } = await authClient.useSession(useFetch)
+  if (!session.value) {
+    return navigateTo(`/login?next=${encodeURIComponent(to.fullPath)}`)
+  }
 })

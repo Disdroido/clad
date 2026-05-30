@@ -1,14 +1,24 @@
 import { neon } from '@neondatabase/serverless'
+import { drizzle } from 'drizzle-orm/neon-http'
+import * as schema from './schema'
 
-const config = useRuntimeConfig()
+/**
+ * Drizzle ORM instance, lazily constructed per-request so Cloudflare Pages
+ * Workers (which init modules once per isolate) pick up runtime config
+ * correctly. Better Auth's drizzle adapter, and all app queries, go through
+ * this.
+ */
+let _db: ReturnType<typeof drizzle<typeof schema>> | null = null
 
 export function useDb() {
-  const sql = neon(config.neonDatabaseUrl)
-  return sql
+  if (_db) return _db
+  const { neonDatabaseUrl } = useRuntimeConfig()
+  if (!neonDatabaseUrl) {
+    throw new Error('NEON_DATABASE_URL is not set')
+  }
+  const sql = neon(neonDatabaseUrl as string)
+  _db = drizzle(sql, { schema })
+  return _db
 }
 
-// Typed query wrappers
-export async function query<T = any>(strings: TemplateStringsArray, ...values: any[]): Promise<T[]> {
-  const db = useDb()
-  return db(strings, ...values) as Promise<T[]>
-}
+export { schema }

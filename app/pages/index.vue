@@ -19,16 +19,16 @@ useHead({
     </p>
     <div class="flex gap-4">
       <NuxtLink
-        to="/onboarding"
+        to="/signup"
         class="rounded-lg bg-brand-600 px-6 py-3 text-white hover:bg-brand-700 transition"
       >
         Get Started
       </NuxtLink>
       <NuxtLink
-        to="/wardrobe"
+        to="/login"
         class="rounded-lg border border-brand-300 px-6 py-3 text-brand-700 hover:bg-brand-100 transition"
       >
-        View Wardrobe
+        Sign In
       </NuxtLink>
     </div>
   </div>

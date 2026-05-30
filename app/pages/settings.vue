@@ -1,11 +1,26 @@
 <script setup lang="ts">
+import { authClient } from '~/lib/auth-client'
+
 definePageMeta({ layout: 'default' })
 useHead({ title: 'Settings — Clad' })
+
+const { data: session } = await authClient.useSession(useFetch)
+
+async function signOut() {
+  await authClient.signOut()
+  await navigateTo('/login')
+}
 </script>
 
 <template>
   <div class="max-w-lg mx-auto">
     <h1 class="text-2xl font-bold text-brand-950 mb-6">Settings</h1>
+
+    <div v-if="session" class="mb-6 rounded-lg bg-white p-4 shadow">
+      <p class="text-sm text-brand-500">Signed in as</p>
+      <p class="font-medium text-brand-900">{{ session.user.name }}</p>
+      <p class="text-sm text-brand-600">{{ session.user.email }}</p>
+    </div>
 
     <div class="space-y-4">
       <NuxtLink to="/onboarding" class="flex items-center justify-between rounded-lg bg-white p-4 shadow hover:shadow-md transition">
@@ -23,6 +38,13 @@ useHead({ title: 'Settings — Clad' })
           Export as JSON
         </button>
       </div>
+
+      <button
+        @click="signOut"
+        class="w-full rounded-lg border border-red-300 bg-white px-4 py-3 text-sm font-medium text-red-700 hover:bg-red-50 transition"
+      >
+        Sign out
+      </button>
     </div>
   </div>
 </template>

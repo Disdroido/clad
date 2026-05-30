@@ -28,6 +28,13 @@ export default defineNuxtConfig({
     plugins: [
       tailwindcss(),
     ],
+    optimizeDeps: {
+      include: [
+        '@vue/devtools-core',
+        '@vue/devtools-kit',
+        'better-auth/vue'
+      ]
+    }
   },
 
   nitro: {
@@ -40,9 +47,9 @@ export default defineNuxtConfig({
     openrouterApiKey: process.env.OPENROUTER_API_KEY,
     neonDatabaseUrl: process.env.NEON_DATABASE_URL,
     r2AccountId: process.env.R2_ACCOUNT_ID,
-    r2AccessKeyId: process.env.R2_ACCESS_KEY_ID,
-    r2SecretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
+    r2ApiToken: process.env.R2_API_TOKEN,
     r2BucketName: process.env.R2_BUCKET_NAME,
+    r2PublicUrl: process.env.R2_PUBLIC_URL,
     authSecret: process.env.AUTH_SECRET,
     // Public (exposed to client)
     public: {

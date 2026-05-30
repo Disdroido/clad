@@ -3,17 +3,17 @@ import { generateValidOutfits } from '../../utils/outfit-engine'
 import { generateOutfitReasoning } from '../../utils/openrouter'
 import { wardrobeItems, profiles } from '../../db/schema'
 import { useDb } from '../../db'
+import { requireUserId } from '../../utils/session'
 
 export default defineEventHandler(async (event) => {
+  const userId = await requireUserId(event)
+
   const body = await readBody(event)
   const { occasion } = body
 
   if (!occasion) {
     throw createError({ statusCode: 400, message: 'occasion is required' })
   }
-
-  // TODO: Get real user ID from auth session
-  const userId = 'temp-user-id'
 
   const db = useDb()
 

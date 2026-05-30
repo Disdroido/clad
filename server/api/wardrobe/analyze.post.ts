@@ -1,6 +1,8 @@
 import { analyzeClothingImage } from '../../utils/openrouter'
+import { requireUserId } from '../../utils/session'
 
 export default defineEventHandler(async (event) => {
+  await requireUserId(event)
   const body = await readBody(event)
   const { imageUrl } = body
 

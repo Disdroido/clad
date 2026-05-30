@@ -88,9 +88,33 @@ async function next() {
   if (step.value < totalSteps) step.value++
 }
 
+const saving = ref(false)
+const saveError = ref<string | null>(null)
+
 async function finish() {
-  // TODO: Save profile to API
-  await navigateTo('/wardrobe')
+  if (saving.value) return
+  saveError.value = null
+  saving.value = true
+  try {
+    await $fetch('/api/profile', {
+      method: 'POST',
+      body: {
+        stylePreferences: styleVibes.value,
+        bodyType: bodyType.value || null,
+        preferredColours: preferredColours.value,
+        dislikedColours: dislikedColours.value,
+        climate: climate.value || null,
+        wardrobeGoal: wardrobeGoal.value || null,
+      },
+    })
+    await navigateTo('/wardrobe')
+  }
+  catch (e: any) {
+    saveError.value = e?.data?.message ?? e?.message ?? 'Could not save your profile.'
+  }
+  finally {
+    saving.value = false
+  }
 }
 </script>
 
@@ -267,10 +291,12 @@ async function finish() {
       <button
         v-if="step === totalSteps"
         @click="finish"
-        class="flex-1 rounded-lg bg-brand-600 py-3 text-white hover:bg-brand-700 transition"
+        :disabled="saving || !canProceed"
+        class="flex-1 rounded-lg bg-brand-600 py-3 text-white hover:bg-brand-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        Start Using Clad →
+        {{ saving ? 'Saving…' : 'Start Using Clad →' }}
       </button>
     </div>
+    <p v-if="saveError" class="mt-3 text-sm text-red-600">{{ saveError }}</p>
   </div>
 </template>

@@ -33,8 +33,7 @@ const COLOUR_HARMONY: Record<string, string[]> = {
   'blue': ['white', 'grey', 'tan', 'brown', 'cream', 'navy'],
   'green': ['white', 'brown', 'cream', 'navy', 'tan', 'grey'],
   'burgundy': ['navy', 'cream', 'black', 'grey', 'tan'],
-  'pink': ['grey', 'navy', 'white', 'black', 'cream'],
-  'white': ['black', 'navy', 'red', 'blue', 'grey', 'brown'],
+  'pink': ['grey', 'navy', 'white', 'black', 'cream']
 }
 
 // Formality levels in ascending order
