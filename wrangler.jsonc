@@ -1,15 +1,13 @@
 {
-  // Cloudflare Pages config. Wrangler reads this during deploy.
-  //
-  // pages_build_output_dir is REQUIRED — without it, `wrangler deploy` fails
-  // with "Missing entry-point to Worker script" because it doesn't know this
-  // is a Pages project with a pre-built output in dist/.
-  //
-  // nodejs_compat is REQUIRED for better-auth (Buffer, process.env) and
-  // @neondatabase/serverless.
+  // Cloudflare Workers + Assets (matches Nuxt `cloudflare` preset output).
+  // Required for `wrangler deploy` — the command Cloudflare CI runs.
   "$schema": "https://unpkg.com/wrangler/config-schema.json",
   "name": "clad",
-  "pages_build_output_dir": "./dist",
+  "main": "./.output/server/index.mjs",
+  "no_bundle": true,
+  "assets": {
+    "directory": "./.output/public"
+  },
   "compatibility_date": "2025-09-01",
   "compatibility_flags": ["nodejs_compat"]
 }

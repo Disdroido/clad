@@ -40,10 +40,11 @@ export default defineNuxtConfig({
   },
 
   nitro: {
-    preset: 'cloudflare-pages',
+    // Workers + Assets preset (required for `wrangler deploy`).
+    // cloudflare-pages outputs to dist/ for `wrangler pages deploy` only.
+    preset: 'cloudflare',
     compatibilityDate: '2025-09-01',
     cloudflare: {
-      // Merge nodejs_compat + output dir into wrangler config at build time.
       deployConfig: true,
       nodeCompat: true,
     },
