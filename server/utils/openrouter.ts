@@ -1,12 +1,14 @@
 import OpenAI from 'openai'
+import { getServerEnv, requireServerEnv } from './runtime-env'
 
 export function getOpenRouterClient() {
-  const config = useRuntimeConfig()
+  const { appUrl } = getServerEnv()
+  const apiKey = requireServerEnv('openrouterApiKey')
   return new OpenAI({
-    apiKey: config.openrouterApiKey,
+    apiKey,
     baseURL: 'https://openrouter.ai/api/v1',
     defaultHeaders: {
-      'HTTP-Referer': config.public.appUrl,
+      'HTTP-Referer': appUrl,
       'X-Title': 'Clad',
     },
   })

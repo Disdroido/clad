@@ -1,6 +1,7 @@
 import { neon } from '@neondatabase/serverless'
 import { drizzle } from 'drizzle-orm/neon-http'
 import * as schema from './schema'
+import { requireServerEnv } from '../utils/runtime-env'
 
 /**
  * Per-request Drizzle instance. On Cloudflare Workers we deliberately do NOT
@@ -9,11 +10,8 @@ import * as schema from './schema'
  * with isolate reuse.
  */
 export function useDb() {
-  const { neonDatabaseUrl } = useRuntimeConfig()
-  if (!neonDatabaseUrl) {
-    throw new Error('NEON_DATABASE_URL is not set')
-  }
-  const sql = neon(neonDatabaseUrl as string)
+  const neonDatabaseUrl = requireServerEnv('neonDatabaseUrl')
+  const sql = neon(neonDatabaseUrl)
   return drizzle(sql, { schema })
 }
 

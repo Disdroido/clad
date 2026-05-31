@@ -1,6 +1,7 @@
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { useDb } from '~~/server/db'
+import { getServerEnv } from '~~/server/utils/runtime-env'
 
 /**
  * Per-request Better Auth factory. We intentionally do NOT cache the instance
@@ -8,18 +9,19 @@ import { useDb } from '~~/server/db'
  * singletons on Cloudflare Workers, since module state is reused across
  * isolates and can leak between requests. Constructing per request is also
  * the only way runtime config is reliably available.
- *
- * The cost is small — Better Auth's config object is lightweight; the
- * expensive bits (DB calls, password hashing) happen lazily.
  */
 export function useAuth() {
-  const config = useRuntimeConfig()
+  const { authSecret, appUrl, isProduction } = getServerEnv()
+  if (!authSecret) {
+    throw new Error('AUTH_SECRET is not set')
+  }
+
   const db = useDb()
 
   return betterAuth({
     database: drizzleAdapter(db, { provider: 'pg' }),
-    secret: config.authSecret as string,
-    baseURL: config.public.appUrl as string,
+    secret: authSecret,
+    baseURL: appUrl,
     emailAndPassword: {
       enabled: true,
       autoSignIn: true,
@@ -30,6 +32,20 @@ export function useAuth() {
       expiresIn: 60 * 60 * 24 * 30,
       updateAge: 60 * 60 * 24,
     },
-    trustedOrigins: [config.public.appUrl as string].filter(Boolean),
+    trustedOrigins: [appUrl],
+    advanced: {
+      // Cloudflare Workers expose the client IP via cf-connecting-ip, not
+      // x-forwarded-for. Without this, rate limiting logs a warning (and is
+      // skipped) on every auth request.
+      ipAddress: {
+        ipAddressHeaders: ['cf-connecting-ip', 'x-forwarded-for'],
+      },
+      useSecureCookies: isProduction,
+      defaultCookieAttributes: {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: 'lax',
+      },
+    },
   })
 }

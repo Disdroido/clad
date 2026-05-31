@@ -32,20 +32,15 @@ function encodeKey(key: string): string {
     .join('/')
 }
 
+import { getServerEnv, requireServerEnv } from './runtime-env'
+
 function getR2Config() {
-  const config = useRuntimeConfig()
-  const accountId = config.r2AccountId as string | undefined
-  const apiToken = config.r2ApiToken as string | undefined
-  const bucket = config.r2BucketName as string | undefined
-  const publicUrl = config.r2PublicUrl as string | undefined
+  const { r2PublicUrl } = getServerEnv()
+  const accountId = requireServerEnv('r2AccountId')
+  const apiToken = requireServerEnv('r2ApiToken')
+  const bucket = requireServerEnv('r2BucketName')
 
-  if (!accountId || !apiToken || !bucket) {
-    throw new Error(
-      'R2 is not configured. Set R2_ACCOUNT_ID, R2_API_TOKEN and R2_BUCKET_NAME in your environment.',
-    )
-  }
-
-  return { accountId, apiToken, bucket, publicUrl }
+  return { accountId, apiToken, bucket, publicUrl: r2PublicUrl }
 }
 
 export function r2PublicUrl(key: string): string {
