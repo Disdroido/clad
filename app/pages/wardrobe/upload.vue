@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useFileDialog, useObjectUrl } from '@vueuse/core'
 
 definePageMeta({
@@ -10,20 +10,53 @@ useHead({
   title: 'Upload — Clad'
 })
 
+interface AnalysisResult {
+  clothingType: string
+  colour: string
+  pattern: string
+  material: string
+  formalityLevel: string
+  season: string
+  confidence: number
+}
+
 interface UploadItem {
   file: File
   preview: string
   status: 'pending' | 'uploading' | 'analyzing' | 'done' | 'error'
-  result?: {
-    clothingType: string
-    colour: string
-    pattern: string
-    material: string
-    formalityLevel: string
-    season: string
-    confidence: number
-  }
+  imageUrl?: string
+  result?: AnalysisResult
+  saved?: boolean
   error?: string
+}
+
+function fetchErrorMessage(err: unknown): string {
+  if (err && typeof err === 'object') {
+    const e = err as { data?: { message?: string }; statusMessage?: string; message?: string }
+    return e.data?.message || e.statusMessage || e.message || 'Upload failed'
+  }
+  return 'Upload failed'
+}
+
+function statusLabel(item: UploadItem): string {
+  switch (item.status) {
+    case 'pending':
+      return 'Ready to analyze'
+    case 'uploading':
+      return 'Uploading...'
+    case 'analyzing':
+      return 'AI is analyzing...'
+    case 'done':
+      if (item.saved) return 'Saved to wardrobe'
+      if (item.result) {
+        return `${item.result.clothingType} — ${item.result.colour} (${Math.round(item.result.confidence * 100)}% confident)`
+      }
+      return 'Analysis complete'
+    case 'error':
+      return item.error || 'Upload failed'
+    default:
+      return ''
+  }
 }
 
 const { files, open, reset } = useFileDialog({
@@ -50,39 +83,88 @@ async function onFilesSelected() {
   }))
 }
 
-async function uploadAll() {
+const hasPendingItems = computed(() =>
+  uploadItems.value.some(item => item.status === 'pending' || item.status === 'error'),
+)
+
+const canSaveToWardrobe = computed(() =>
+  uploadItems.value.some(item => item.status === 'done' && !item.saved && item.result && item.imageUrl),
+)
+
+async function analyzeItems() {
   processing.value = true
 
   for (const item of uploadItems.value) {
+    if (item.status !== 'pending' && item.status !== 'error') continue
+
     item.status = 'uploading'
+    item.error = undefined
+    item.saved = false
+
     try {
-      // Step 1: Upload image to R2
       const formData = new FormData()
       formData.append('file', item.file)
 
-      const uploadRes = await $fetch('/api/wardrobe/upload', {
+      const uploadRes = await $fetch<{ imageUrl: string }>('/api/wardrobe/upload-image', {
         method: 'POST',
         body: formData,
       })
 
-      // Step 2: Analyze with AI vision model
+      item.imageUrl = uploadRes.imageUrl
       item.status = 'analyzing'
-      const analyzeRes = await $fetch('/api/wardrobe/analyze', {
+
+      const analyzeRes = await $fetch<AnalysisResult>('/api/wardrobe/analyze', {
         method: 'POST',
-        body: {
-          imageUrl: uploadRes.imageUrl,
-        },
+        body: { imageUrl: uploadRes.imageUrl },
       })
 
       item.result = analyzeRes
       item.status = 'done'
-    } catch (err: any) {
+    } catch (err) {
       item.status = 'error'
-      item.error = err.message || 'Upload failed'
+      item.error = fetchErrorMessage(err)
     }
   }
 
   processing.value = false
+}
+
+async function saveToWardrobe() {
+  processing.value = true
+
+  for (const item of uploadItems.value) {
+    if (item.status !== 'done' || item.saved || !item.result || !item.imageUrl) continue
+
+    try {
+      await $fetch('/api/wardrobe/upload', {
+        method: 'POST',
+        body: {
+          imageUrl: item.imageUrl,
+          clothingType: item.result.clothingType,
+          colour: item.result.colour,
+          pattern: item.result.pattern,
+          material: item.result.material,
+          formalityLevel: item.result.formalityLevel,
+          season: item.result.season,
+          aiConfidence: item.result.confidence,
+        },
+      })
+      item.saved = true
+    } catch (err) {
+      item.status = 'error'
+      item.error = fetchErrorMessage(err)
+    }
+  }
+
+  processing.value = false
+}
+
+async function handlePrimaryAction() {
+  if (canSaveToWardrobe.value) {
+    await saveToWardrobe()
+    return
+  }
+  await analyzeItems()
 }
 
 function removeItem(index: number) {
@@ -124,14 +206,13 @@ watch(files, onFilesSelected)
           <div class="flex-1">
             <p class="font-medium">{{ item.file.name }}</p>
             <p class="text-sm" :class="{
+              'text-brand-500': item.status === 'pending',
               'text-yellow-600': item.status === 'uploading' || item.status === 'analyzing',
-              'text-green-600': item.status === 'done',
+              'text-green-600': item.status === 'done' && item.saved,
+              'text-brand-700': item.status === 'done' && !item.saved,
               'text-red-600': item.status === 'error',
             }">
-              {{ item.status === 'uploading' && 'Uploading...' }}
-              {{ item.status === 'analyzing' && 'AI is analyzing...' }}
-              {{ item.status === 'done' && item.result && `${item.result.clothingType} — ${item.result.colour} (${Math.round(item.result.confidence * 100)}% confident)` }}
-              {{ item.status === 'error' && item.error }}
+              {{ statusLabel(item) }}
             </p>
           </div>
           <button
@@ -194,11 +275,19 @@ watch(files, onFilesSelected)
           + Add More
         </button>
         <button
-          @click="uploadAll"
-          :disabled="processing"
+          @click="handlePrimaryAction"
+          :disabled="processing || (!hasPendingItems && !canSaveToWardrobe)"
           class="flex-1 rounded-lg bg-brand-600 py-3 text-white hover:bg-brand-700 transition disabled:opacity-50"
         >
-          {{ processing ? 'Processing...' : 'Save to Wardrobe' }}
+          {{
+            processing
+              ? 'Processing...'
+              : canSaveToWardrobe
+                ? 'Save to Wardrobe'
+                : hasPendingItems
+                  ? 'Analyze Photos'
+                  : 'Saved'
+          }}
         </button>
       </div>
     </div>
