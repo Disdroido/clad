@@ -6,7 +6,7 @@ import { useAuth } from './auth'
  * Use this in any API handler that wants to know who's calling.
  */
 export async function getServerSession(event: H3Event) {
-  const auth = useAuth()
+  const auth = useAuth(event)
   return auth.api.getSession({ headers: event.headers })
 }
 

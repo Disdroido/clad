@@ -2,26 +2,14 @@
   // User-level Wrangler config — merged with Nitro's generated config in
   // .output/server/wrangler.json at build time (deployConfig: true).
   //
-  // Do NOT set main/assets here; Nitro generates those paths correctly.
-  // Deploy with:  npm run deploy  (runs wrangler --cwd .output deploy)
+  // Set secrets in Cloudflare dashboard (Settings → Variables and Secrets),
+  // NOT in this file. Required:
+  //   Secrets: AUTH_SECRET, NEON_DATABASE_URL, OPENROUTER_API_KEY, R2_API_TOKEN
+  //   Vars:    PUBLIC_APP_URL (https://clad.ethan-worth2.workers.dev), R2_*
+  //
+  // Deploy: npm run deploy
   "$schema": "https://unpkg.com/wrangler/config-schema.json",
   "name": "clad",
   "compatibility_date": "2025-09-01",
-  "compatibility_flags": ["nodejs_compat", "no_nodejs_compat_v2"],
-  "vars": {
-    "AUTH_SECRET": "uONMA/MJu2A5m1MeYCEvs+/gcX1gZFwaucJELPQDDxk=",
-    "NEON_DATABASE_URL": "postgresql://neondb_owner:npg_NLpHz0EfPUk7@ep-dark-lab-a76if1ar-pooler.ap-southeast-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
-    "OPENROUTER_API_KEY": "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",
-    "PUBLIC_APP_URL": "clad.ethan-worth2.workers.dev",
-    "R2_ACCOUNT_ID": "81019ffa46f67a57f87a06045bfa8916",
-    "R2_API_TOKEN": "cfat_QeMPTI31dG7kTgavLOdDIPIRIyMc8kEGa4Vp3rGVdc88d35b",
-    "R2_BUCKET_NAME": "clad-images",
-    "R2_PUBLIC_URL": "https://pub-9f541dddbec545f984970ce9d1692b33.r2.dev"
-  },
-  "observability": {
-    "logs": {
-      "enabled": false,
-      "invocation_logs": true
-    }
-  }
+  "compatibility_flags": ["nodejs_compat", "no_nodejs_compat_v2"]
 }
