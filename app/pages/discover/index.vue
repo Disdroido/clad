@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import FeedCard from '~/components/FeedCard.vue'
+
 definePageMeta({ layout: 'default' })
 useHead({ title: 'Discover — Clad' })
 
@@ -90,34 +92,12 @@ onUnmounted(() => {
     <!-- Feed grid -->
     <div v-else>
       <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-        <NuxtLink
+        <FeedCard
           v-for="item in items"
           :key="item.id"
-          :to="`/share/${item.shortId}`"
-          class="group rounded-xl bg-white p-3 shadow hover:shadow-md transition cursor-pointer"
-        >
-          <!-- Item thumbnails (2x2 mini grid) -->
-          <div class="grid grid-cols-2 gap-1 rounded-lg overflow-hidden mb-3 aspect-square bg-brand-100">
-            <template v-for="(itemId, idx) in ((item.outfitItemIds as string[]) || []).slice(0, 4)" :key="idx">
-              <div class="bg-brand-100 flex items-center justify-center text-2xl">
-                👔
-              </div>
-            </template>
-          </div>
-
-          <p class="text-sm font-medium text-brand-900 truncate">{{ item.outfitName || 'Outfit' }}</p>
-          <NuxtLink
-            v-if="item.sharerDisplayName"
-            :to="`/profile/${item.sharerUsername}`"
-            class="text-xs text-brand-500 hover:text-brand-700"
-            @click.stop
-          >
-            {{ item.sharerDisplayName }}
-          </NuxtLink>
-          <div class="flex items-center gap-1 mt-1 text-xs text-brand-400">
-            <span>❤️ {{ item.likeCount || 0 }}</span>
-          </div>
-        </NuxtLink>
+          :outfit="item"
+          :show-sharer="true"
+        />
       </div>
 
       <!-- Load more sentinel -->

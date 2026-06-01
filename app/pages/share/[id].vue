@@ -1,6 +1,13 @@
 <script setup lang="ts">
+import LikeButton from '~/components/LikeButton.vue'
+import SaveButton from '~/components/SaveButton.vue'
+import { authClient } from '~/lib/auth-client'
+
 const route = useRoute()
 const config = useRuntimeConfig()
+
+const { data: session } = await authClient.useSession(useFetch)
+const loggedIn = computed(() => !!session.value?.user)
 
 const shared = ref<any>(null)
 const loading = ref(true)
@@ -129,10 +136,20 @@ onMounted(() => {
         <p>No item details available for this outfit.</p>
       </div>
 
-      <!-- Engagement bar (simple stats + share) -->
+      <!-- Engagement bar -->
       <div class="flex items-center justify-between rounded-lg bg-white p-4 shadow">
-        <div class="flex items-center gap-4 text-sm text-brand-500">
-          <span>❤️ {{ shared.likeCount || 0 }}</span>
+        <div class="flex items-center gap-3">
+          <LikeButton
+            :outfit-id="shared.id"
+            :initial-liked="shared.viewerLiked || false"
+            :initial-count="shared.likeCount || 0"
+            :logged-in="loggedIn"
+          />
+          <SaveButton
+            :outfit-id="shared.id"
+            :initial-saved="false"
+            :logged-in="loggedIn"
+          />
         </div>
         <button
           @click="copyShareLink"
