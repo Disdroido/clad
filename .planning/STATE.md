@@ -4,12 +4,12 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 04
 status: Executing Phase 04
-last_updated: "2026-06-01T04:22:00Z"
+last_updated: "2026-06-01T04:18:25.026Z"
 progress:
   total_phases: 8
   completed_phases: 2
   total_plans: 9
-  completed_plans: 7
+  completed_plans: 8
 ---
 
 # Current State
@@ -29,8 +29,9 @@ progress:
   - [x] 03-01-PLAN.md — Weather API integration and data model ✅
   - [x] 03-02-PLAN.md — Temperature-aware outfit scoring ✅
   - [x] 03-03-PLAN.md — Weather display in UI ✅
-- Phase 04: 🚧 In Progress (1/3 plans complete)
+- Phase 04: 🚧 In Progress (2/3 plans complete)
   - [x] 04-01-PLAN.md — Backend analytics API + gap rules engine ✅
+  - [x] 04-02-PLAN.md — Insights page UI with charts + nav integration ✅
 - Phases 05-08: 🔮 Defined in roadmap
 
 ## Decisions
@@ -55,6 +56,9 @@ progress:
 - [Phase 03-weather-integration]: Coords passed via URL query params between pages — simpler than store or session
 - [Phase 04]: Most-worn calculation uses application-level Map aggregation instead of raw SQL jsonb_array_elements_text — avoids Neon HTTP driver type casting issues per D-05
 - [Phase 04]: Gap rules engine returns gaps sorted by severity (high to medium to low) using deterministic ordering
+- [Phase 04-02]: Insights nav icon uses 📊 emoji, placed after Outfits in sidebar and between What I Wore and Settings in bottom nav
+- [Phase 04-02]: Chart.js 12-color categorical palette (indigo→pink→amber→green→cyan→blue) for doughnut chart slices
+- [Phase 04-02]: Horizontal bars (indexAxis: 'y') for most-worn chart — better label readability for clothing type names
 
 ## Blockers
 
