@@ -22,3 +22,9 @@ Clad is an AI-powered wardrobe management app. Users photograph their clothing, 
 - Brand colors (`brand-50` through `brand-950`) via Tailwind v4
 - Rounded corners, soft shadows, brand-100 backgrounds
 - Clean, minimal aesthetic with emoji icons
+
+## Current State
+**Phase 02 (Outfit Lifecycle) complete** — Wear tracking infrastructure, rating, wear history UI, and wear-aware outfit generation all implemented.
+**Phase 03 (Weather Integration)** — next up.
+
+*Last updated: 2026-06-01*
