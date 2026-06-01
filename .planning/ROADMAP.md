@@ -64,13 +64,14 @@
 ---
 
 ## Phase 04: Wardrobe Analytics & Insights
-**Status:** 🔮 Proposed
+**Status:** 🚧 In Progress (0/3 plans complete)
 **Goal:** Provide users with data-driven insights about their wardrobe composition, style patterns, and gaps.
 
 **Plans:**
-- [ ] 04-01-PLAN.md — Analytics dashboard with charts
-- [ ] 04-02-PLAN.md — Color palette analysis and style insights
-- [ ] 04-03-PLAN.md — Wardrobe gap analysis + shopping suggestions
+3/3 plans planned
+- [ ] 04-01-PLAN.md — Backend analytics API + gap rules engine (Wave 1)
+- [ ] 04-02-PLAN.md — Insights page UI with charts + nav integration (Wave 2)
+- [ ] 04-03-PLAN.md — Gap analysis API + gap card UI (Wave 3)
 
 **Requirements:**
 - [ANALYTICS-01] User can see wardrobe composition (categories, colours, seasons)
