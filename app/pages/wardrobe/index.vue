@@ -2,6 +2,13 @@
 definePageMeta({ layout: 'default' })
 useHead({ title: 'My Wardrobe — Clad' })
 
+const route = useRoute()
+const activeTab = computed(() => {
+  if (route.path.startsWith('/wardrobe/wishlist')) return 'wishlist'
+  if (route.path.startsWith('/wardrobe/laundry')) return 'laundry'
+  return 'wardrobe'
+})
+
 const wardrobeStore = useWardrobeStore()
 
 onMounted(() => wardrobeStore.fetchItems())
@@ -16,6 +23,30 @@ onMounted(() => wardrobeStore.fetchItems())
         class="rounded-lg bg-brand-600 px-4 py-2 text-white hover:bg-brand-700 transition"
       >
         + Add Item
+      </NuxtLink>
+    </div>
+
+    <!-- Sub-navigation tabs -->
+    <div class="mb-4 flex border-b border-brand-200">
+      <NuxtLink
+        to="/wardrobe"
+        class="px-4 py-2 text-sm font-medium border-b-2"
+        :class="activeTab === 'wardrobe' ? 'border-brand-600 text-brand-600' : 'border-transparent text-brand-500 hover:text-brand-600'"
+      >
+        My Wardrobe
+      </NuxtLink>
+      <NuxtLink
+        to="/wardrobe/wishlist"
+        class="px-4 py-2 text-sm font-medium border-b-2"
+        :class="activeTab === 'wishlist' ? 'border-brand-600 text-brand-600' : 'border-transparent text-brand-500 hover:text-brand-600'"
+      >
+        Wishlist
+      </NuxtLink>
+      <NuxtLink
+        to="/wardrobe/laundry"
+        class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-brand-500 hover:text-brand-600"
+      >
+        Laundry
       </NuxtLink>
     </div>
 
