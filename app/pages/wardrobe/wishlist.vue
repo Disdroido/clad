@@ -4,6 +4,12 @@ useHead({ title: 'Wishlist — Clad' })
 
 const route = useRoute()
 
+const activeTab = computed(() => {
+  if (route.path.startsWith('/wardrobe/wishlist')) return 'wishlist'
+  if (route.path.startsWith('/wardrobe/laundry')) return 'laundry'
+  return 'wardrobe'
+})
+
 // Reactive state
 const items = ref<any[]>([])
 const loading = ref(true)
@@ -162,6 +168,31 @@ onMounted(() => fetchItems())
       >
         + Add Item
       </button>
+    </div>
+
+    <!-- Sub-navigation tabs -->
+    <div class="mb-4 flex border-b border-brand-200">
+      <NuxtLink
+        to="/wardrobe"
+        class="px-4 py-2 text-sm font-medium border-b-2"
+        :class="activeTab === 'wardrobe' ? 'border-brand-600 text-brand-600' : 'border-transparent text-brand-500 hover:text-brand-600'"
+      >
+        My Wardrobe
+      </NuxtLink>
+      <NuxtLink
+        to="/wardrobe/wishlist"
+        class="px-4 py-2 text-sm font-medium border-b-2"
+        :class="activeTab === 'wishlist' ? 'border-brand-600 text-brand-600' : 'border-transparent text-brand-500 hover:text-brand-600'"
+      >
+        Wishlist
+      </NuxtLink>
+      <NuxtLink
+        to="/wardrobe/laundry"
+        class="px-4 py-2 text-sm font-medium border-b-2"
+        :class="activeTab === 'laundry' ? 'border-brand-600 text-brand-600' : 'border-transparent text-brand-500 hover:text-brand-600'"
+      >
+        Laundry
+      </NuxtLink>
     </div>
 
     <!-- Purchase toast -->
