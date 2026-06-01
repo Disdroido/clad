@@ -19,7 +19,7 @@ export async function analyzeClothingImage(imageUrl: string) {
   const client = getOpenRouterClient()
 
   const response = await client.chat.completions.create({
-    model: 'google/gemini-2.0-flash-lite-001', // cheap vision-capable model
+    model: 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free', // cheap vision-capable model
     messages: [
       {
         role: 'user',
@@ -64,7 +64,7 @@ export async function generateOutfitReasoning(
   const client = getOpenRouterClient()
 
   const response = await client.chat.completions.create({
-    model: 'google/gemini-2.0-flash-lite-001', // same model works fine for text too
+    model: 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free', // same model works fine for text too
     messages: [
       {
         role: 'system',
@@ -121,7 +121,7 @@ export async function generatePackingList(
   const client = getOpenRouterClient()
 
   const response = await client.chat.completions.create({
-    model: 'google/gemini-2.0-flash-lite-001',
+    model: 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free',
     messages: [
       {
         role: 'system',
