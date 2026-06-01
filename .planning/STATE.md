@@ -4,12 +4,12 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 07
 status: Executing Phase 07
-last_updated: "2026-06-01T10:52:41.826Z"
+last_updated: "2026-06-01T10:59:07.738Z"
 progress:
   total_phases: 8
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 18
-  completed_plans: 17
+  completed_plans: 18
 ---
 
 # Current State
@@ -89,6 +89,10 @@ progress:
 - [Phase 07-02]: isClean filter uses `!== false` (not `=== true`) so items without the field pass through — backward compatible
 - [Phase 07-02]: skipDirty defaults to true (skip dirty items by default), generate endpoint inverts via `!skipLaundry`
 - [Phase 07-02]: Condition penalty: -2 for worn/needs_repair, +1 for new — applied to both base items and outerwear
+- [Phase 07]: Laundry page fetches all items and filters client-side rather than a dedicated API endpoint
+- [Phase 07]: Condition badge defaults to blue=good when condition is empty/null
+- [Phase 07]: Item detail splits laundry/condition/lifecycle into independent sections with separate save mechanisms
+- [Phase 07]: Laundry toggle on generate page defaults to false (skip dirty items by default)
 
 ## Blockers
 
