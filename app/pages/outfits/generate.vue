@@ -19,9 +19,44 @@ const occasions = [
 
 const selectedOccasion = ref<string | null>(null)
 
+// Weather state
+const weather = ref<{
+  temperature: number
+  condition: string
+  iconUrl: string
+  locationName: string
+  feelsLike: number
+} | null>(null)
+const weatherLoading = ref(true)
+const coords = ref<{ lat: number; lon: number } | null>(null)
+
+onMounted(async () => {
+  // Get location from browser (cached or fresh)
+  const { requestLocation } = useGeolocation()
+  const location = await requestLocation()
+  coords.value = location
+
+  if (location) {
+    // Fetch weather for the badge display (non-blocking per D-05)
+    try {
+      weather.value = await $fetch('/api/weather/current', {
+        params: { lat: location.lat, lon: location.lon },
+      })
+    } catch {
+      weather.value = null
+    }
+  }
+  weatherLoading.value = false
+})
+
 function generateOutfit() {
   if (!selectedOccasion.value) return
-  router.push(`/outfits/result?occasion=${selectedOccasion.value}`)
+  const query: Record<string, string> = { occasion: selectedOccasion.value }
+  if (coords.value) {
+    query.lat = String(coords.value.lat)
+    query.lon = String(coords.value.lon)
+  }
+  router.push({ path: '/outfits/result', query })
 }
 </script>
 
@@ -29,6 +64,17 @@ function generateOutfit() {
   <div>
     <h1 class="text-2xl font-bold text-brand-950 mb-2">Pick My Outfit</h1>
     <p class="text-brand-500 mb-6">What's the occasion?</p>
+
+    <!-- Weather badge (D-04: near occasion selector) -->
+    <div class="mb-6">
+      <WeatherBadge
+        :temperature="weather?.temperature"
+        :condition="weather?.condition"
+        :icon-url="weather?.iconUrl"
+        :location-name="weather?.locationName"
+        :loading="weatherLoading"
+      />
+    </div>
 
     <!-- Occasion picker -->
     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 mb-8">

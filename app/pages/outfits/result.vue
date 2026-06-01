@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 
 definePageMeta({ layout: 'default' })
 
@@ -10,14 +10,30 @@ const occasion = ref(route.query.occasion as string || '')
 const outfitResult = ref<any>(null)
 const loading = ref(true)
 const saving = ref(false)
+const showWeatherFallback = ref(false)
+
+// Extract lat/lon from route query (passed from generate.vue)
+const lat = computed(() => route.query.lat ? parseFloat(route.query.lat as string) : undefined)
+const lon = computed(() => route.query.lon ? parseFloat(route.query.lon as string) : undefined)
 
 async function generateOutfit() {
   loading.value = true
+  showWeatherFallback.value = false
   try {
+    const body: Record<string, any> = { occasion: occasion.value }
+    if (lat.value !== undefined && lon.value !== undefined) {
+      body.lat = lat.value
+      body.lon = lon.value
+    }
     outfitResult.value = await $fetch('/api/outfits/generate', {
       method: 'POST',
-      body: { occasion: occasion.value },
+      body,
     })
+    // Show fallback banner when weather was unavailable (D-05)
+    if ((outfitResult.value as any)?.weatherFallback) {
+      showWeatherFallback.value = true
+      setTimeout(() => { showWeatherFallback.value = false }, 6000)
+    }
   } catch (err: any) {
     outfitResult.value = null
     const msg = err?.data?.message || err?.message || 'Failed to generate outfit'
@@ -79,9 +95,26 @@ onMounted(() => {
     <div v-else-if="outfitResult" class="rounded-xl bg-white p-6 shadow-lg md:p-8">
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-xl font-semibold text-brand-900">Your Outfit</h2>
-        <span class="rounded-full bg-brand-100 px-3 py-1 text-sm text-brand-700 capitalize">
-          {{ outfitResult.occasion }}
-        </span>
+        <div class="flex items-center gap-2">
+          <WeatherBadge
+            v-if="outfitResult.weather"
+            :temperature="outfitResult.weather.temperature"
+            :condition="outfitResult.weather.condition"
+            :icon-url="outfitResult.weather.iconUrl"
+            :location-name="outfitResult.weather.locationName"
+          />
+          <span class="rounded-full bg-brand-100 px-3 py-1 text-sm text-brand-700 capitalize">
+            {{ outfitResult.occasion }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Weather fallback toast (D-05) -->
+      <div
+        v-if="showWeatherFallback"
+        class="mb-4 rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-700"
+      >
+        Weather unavailable — using your climate settings
       </div>
 
       <p class="text-brand-600 italic mb-6">{{ outfitResult.explanation }}</p>
