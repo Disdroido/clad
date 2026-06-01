@@ -102,7 +102,7 @@
 **Goal:** Let users share outfits via public links (with SEO preview cards), build public profiles (opt-in), discover other users' outfits through a chronological global feed, and engage with likes, follows, and saves. All social features are opt-in.
 
 **Plans:**
-1/3 plans executed
+3/3 plans complete
 - [x] 06-01-PLAN.md — Schema + API: shared_outfits, public_profiles, likes, follows, saves tables; all 11 API endpoints (share, profile, discover, engagement, inspiration); auth bypass for public pages (Wave 1)
 - [x] 06-02-PLAN.md — Public pages: share/[id] (SEO og:image, og:title), discover feed (infinite scroll), profile/[username]; share button, settings public profile section, nav integration (Wave 2)
 - [x] 06-03-PLAN.md — Engagement components: LikeButton, FollowButton, SaveButton (optimistic UI); FeedCard, ProfileHeader; inspiration board; wiring engagement into pages (Wave 3)

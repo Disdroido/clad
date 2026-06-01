@@ -1,8 +1,8 @@
 import { z } from 'zod'
 import { eq } from 'drizzle-orm'
-import { useDb } from '~~/server/db'
-import { scheduledOutfits, outfits } from '~~/server/db/schema'
-import { requireUserId } from '~~/server/utils/session'
+import { useDb } from '../../../server/db'
+import { scheduledOutfits, outfits } from '../../../server/db/schema'
+import { requireUserId } from '../../../server/utils/session'
 import { and } from 'drizzle-orm'
 
 const bodySchema = z.object({
@@ -43,5 +43,5 @@ export default defineEventHandler(async (event) => {
     })
     .returning()
 
-  return { ...scheduled, message: 'Outfit scheduled' })
+  return { ...scheduled, message: 'Outfit scheduled' }
 })

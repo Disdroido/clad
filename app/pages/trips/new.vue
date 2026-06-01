@@ -64,7 +64,7 @@ async function saveTrip() {
     </div>
 
     <div class="mx-auto max-w-lg">
-      <h1 class="mb-6 text-2xl font-bold text-brand-950">✈️ New Trip</h1>
+      <h1 class="mb-6 text-2xl font-bold text-brand-950">New Trip</h1>
 
       <div class="rounded-xl bg-white p-6 shadow-sm border border-brand-100">
         <div class="space-y-4">

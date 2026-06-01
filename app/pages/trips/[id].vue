@@ -128,7 +128,7 @@ async function deleteTrip() {
 
       <!-- Scheduled Outfits section (placeholder — will be populated by future enhancement) -->
       <div class="rounded-xl border border-brand-100 bg-white p-6 shadow-sm">
-        <h2 class="mb-3 text-base font-semibold text-brand-900">📅 Scheduled Outfits</h2>
+        <h2 class="mb-3 text-base font-semibold text-brand-900">Scheduled Outfits</h2>
         <p class="text-sm text-brand-400">Outfits scheduled during this trip will appear here.</p>
       </div>
     </div>

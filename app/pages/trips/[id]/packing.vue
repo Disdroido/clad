@@ -154,7 +154,7 @@ onMounted(() => {
     <div v-else class="mx-auto max-w-2xl">
       <div class="mb-4 flex items-center justify-between">
         <div>
-          <h1 class="text-xl font-bold text-brand-950">🧳 Packing List</h1>
+          <h1 class="text-xl font-bold text-brand-950">Packing List</h1>
           <p v-if="trip" class="text-sm text-brand-500">for {{ trip.destination }}</p>
         </div>
         <button @click="savePackingList" :disabled="saving"

@@ -69,7 +69,7 @@ onUnmounted(() => {
 
 <template>
   <div>
-    <h1 class="text-2xl font-bold text-brand-950 mb-6">🌍 Discover</h1>
+    <h1 class="text-2xl font-bold text-brand-950 mb-6">Discover</h1>
 
     <!-- Loading -->
     <div v-if="loading" class="flex flex-col items-center justify-center py-20">

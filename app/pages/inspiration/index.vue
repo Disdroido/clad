@@ -44,7 +44,7 @@ onMounted(() => {
 
 <template>
   <div>
-    <h1 class="text-2xl font-bold text-brand-950 mb-6">💡 Inspiration Board</h1>
+    <h1 class="text-2xl font-bold text-brand-950 mb-6">Inspiration Board</h1>
     <p class="text-sm text-brand-500 mb-6">Your saved outfits from the community. Build your style inspiration collection.</p>
 
     <!-- Loading -->

@@ -239,7 +239,7 @@ onMounted(() => {
         <div v-if="showScheduleModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
              @click.self="showScheduleModal = false">
           <div class="w-full max-w-md rounded-xl bg-white p-6 shadow-xl" role="dialog" aria-modal="true">
-            <h2 class="mb-4 text-lg font-semibold text-brand-900">📅 Schedule Outfit</h2>
+            <h2 class="mb-4 text-lg font-semibold text-brand-900">Schedule Outfit</h2>
 
             <div class="mb-4">
               <label class="mb-1 block text-sm font-medium text-brand-700">Date</label>
