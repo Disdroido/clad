@@ -29,15 +29,23 @@ async function generateOutfit() {
 }
 
 async function saveOutfit() {
-  if (!outfitResult.value) return
+  const result = outfitResult.value
+  if (!result) return
+
+  const { items, occasion, explanation } = result
+  if (!occasion || !explanation || !items?.length) {
+    alert('Missing outfit data — try regenerating')
+    return
+  }
+
   saving.value = true
   try {
     await $fetch('/api/outfits', {
       method: 'POST',
       body: {
-        occasion: outfitResult.value.occasion,
-        explanation: outfitResult.value.explanation,
-        itemIds: outfitResult.value.items.map((i: any) => i.id),
+        occasion,
+        explanation,
+        itemIds: items.map((i: any) => i.id),
       },
     })
     saved.value = true

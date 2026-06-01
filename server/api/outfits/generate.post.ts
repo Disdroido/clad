@@ -53,12 +53,24 @@ export default defineEventHandler(async (event) => {
     items: combo.map(i => ({ id: i.id, clothingType: i.clothingType, colour: i.colour, pattern: i.pattern })),
   }))
 
-  const aiResult = await generateOutfitReasoning(profile, candidateForAI, occasion)
-  const selectedCombo = candidates[aiResult.outfitIndex] || candidates[0]
+  let aiResult: { outfitIndex: number; explanation: string } | null = null
+  try {
+    aiResult = await generateOutfitReasoning(profile, candidateForAI, occasion)
+  } catch {
+    // AI call failed — fall back to first candidate
+  }
+
+  const outfitIndex = (typeof aiResult?.outfitIndex === 'number' && candidates[aiResult.outfitIndex])
+    ? aiResult.outfitIndex
+    : 0
+
+  const explanation = (typeof aiResult?.explanation === 'string' && aiResult.explanation.trim().length > 0)
+    ? aiResult.explanation
+    : `A ${occasion} outfit put together from your wardrobe.`
 
   return {
-    items: selectedCombo,
+    items: candidates[outfitIndex],
     occasion,
-    explanation: aiResult.explanation,
+    explanation,
   }
 })
