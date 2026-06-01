@@ -81,13 +81,14 @@
 ---
 
 ## Phase 05: Outfit Planning Calendar
-**Status:** 🔮 Proposed
+**Status:** 🚧 Planning Complete
 **Goal:** Let users plan outfits in advance on a calendar, schedule looks for events and trips.
 
 **Plans:**
-- [ ] 05-01-PLAN.md — Outfit scheduling schema and API
-- [ ] 05-02-PLAN.md — Calendar view UI
-- [ ] 05-03-PLAN.md — Trip packing list generator
+3/3 plans planned
+- [ ] 05-01-PLAN.md — Outfit scheduling schema and API (Wave 1, 3 tasks)
+- [ ] 05-02-PLAN.md — Calendar view UI with v-calendar + nav + schedule from outfit detail (Wave 2, 3 tasks)
+- [ ] 05-03-PLAN.md — Trip packing list generator with AI (Wave 3, 2 tasks)
 
 **Requirements:**
 - [CALENDAR-01] User can schedule outfits for specific dates

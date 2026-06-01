@@ -158,3 +158,29 @@ export const outfitWearEvents = pgTable('outfit_wear_events', {
   notes: text('notes'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 })
+
+export const scheduledOutfits = pgTable('scheduled_outfits', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  outfitId: uuid('outfit_id')
+    .notNull()
+    .references(() => outfits.id, { onDelete: 'cascade' }),
+  scheduledDate: timestamp('scheduled_date').notNull(),
+  notes: text('notes'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
+export const trips = pgTable('trips', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 255 }).notNull(),
+  destination: varchar('destination', { length: 255 }).notNull(),
+  startDate: timestamp('start_date').notNull(),
+  endDate: timestamp('end_date').notNull(),
+  purpose: varchar('purpose', { length: 100 }).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})

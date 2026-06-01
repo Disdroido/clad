@@ -22,6 +22,13 @@
       "when": 1780280718795,
       "tag": "0002_lovely_nighthawk",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1780289107265,
+      "tag": "0003_serious_boom_boom",
+      "breakpoints": true
     }
   ]
 }
