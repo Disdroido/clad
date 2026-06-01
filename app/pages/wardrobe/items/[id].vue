@@ -21,6 +21,11 @@ interface Item {
   formalityLevel: string
   season: string
   aiConfidence: number | null
+  isClean?: boolean
+  condition?: string
+  brand?: string | null
+  pricePaid?: number | null
+  purchaseDate?: string | null
 }
 
 const item = ref<Item | null>(null)
@@ -99,6 +104,91 @@ async function archiveItem() {
     error.value = 'Failed to archive item'
   } finally {
     archiving.value = false
+  }
+}
+
+// Laundry toggle
+const laundryLoading = ref(false)
+
+async function toggleLaundry() {
+  if (!item.value) return
+  laundryLoading.value = true
+  try {
+    await $fetch(`/api/wardrobe/items/${id}/laundry`, {
+      method: 'PATCH',
+      body: { isClean: !item.value.isClean },
+    })
+    item.value.isClean = !item.value.isClean
+    wardrobeStore.invalidate()
+  } catch {
+    error.value = 'Failed to update laundry status'
+  } finally {
+    laundryLoading.value = false
+  }
+}
+
+// Condition selector
+const conditionLoading = ref(false)
+const conditions = [
+  { value: 'new', label: 'New', activeClass: 'bg-green-100 text-green-700' },
+  { value: 'good', label: 'Good', activeClass: 'bg-blue-100 text-blue-700' },
+  { value: 'worn', label: 'Worn', activeClass: 'bg-amber-100 text-amber-700' },
+  { value: 'needs_repair', label: 'Needs Repair', activeClass: 'bg-red-100 text-red-700' },
+]
+
+async function updateCondition(cond: string) {
+  if (!item.value) return
+  conditionLoading.value = true
+  try {
+    await $fetch(`/api/wardrobe/items/${id}/lifecycle`, {
+      method: 'PATCH',
+      body: { condition: cond },
+    })
+    item.value.condition = cond
+    wardrobeStore.invalidateItem(id)
+  } catch {
+    error.value = 'Failed to update condition'
+  } finally {
+    conditionLoading.value = false
+  }
+}
+
+// Purchase metadata
+const showPurchaseMeta = ref(false)
+const lifecycleSaving = ref(false)
+
+const priceDisplay = computed({
+  get: () => {
+    if (!item.value || item.value.pricePaid == null) return null
+    return (item.value.pricePaid / 100).toFixed(2)
+  },
+  set: (_val: string | number | null) => {
+    // handled in saveLifecycle
+  },
+})
+
+async function saveLifecycle() {
+  if (!item.value) return
+  lifecycleSaving.value = true
+  try {
+    const cents = priceDisplay.value != null
+      ? Math.round(parseFloat(priceDisplay.value as string) * 100)
+      : null
+    const body: Record<string, any> = {
+      brand: item.value.brand || null,
+      pricePaid: cents,
+      purchaseDate: item.value.purchaseDate || null,
+    }
+    await $fetch(`/api/wardrobe/items/${id}/lifecycle`, {
+      method: 'PATCH',
+      body,
+    })
+    if (cents != null) item.value.pricePaid = cents
+    wardrobeStore.invalidateItem(id)
+  } catch {
+    error.value = 'Failed to save purchase details'
+  } finally {
+    lifecycleSaving.value = false
   }
 }
 </script>
@@ -192,6 +282,77 @@ async function archiveItem() {
         </div>
         <div v-if="item.aiConfidence" class="flex items-end pb-2">
           <p class="text-xs text-brand-400">AI Confidence: {{ Math.round(item.aiConfidence * 100) }}%</p>
+        </div>
+      </div>
+
+      <!-- Laundry Toggle -->
+      <div class="border-t border-brand-100 pt-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-brand-800">Laundry Status</p>
+            <p class="text-xs text-brand-500">{{ item.isClean ? 'Clean & ready to wear' : 'In the laundry' }}</p>
+          </div>
+          <button
+            @click="toggleLaundry"
+            :disabled="laundryLoading"
+            :class="[
+              'rounded-full px-4 py-2 text-sm font-medium transition',
+              item.isClean
+                ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                : 'bg-amber-100 text-amber-700 hover:bg-amber-200',
+            ]"
+          >
+            {{ laundryLoading ? '...' : item.isClean ? 'Mark Dirty' : 'Mark Clean' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Condition Selector -->
+      <div class="border-t border-brand-100 pt-4">
+        <label class="block text-xs font-medium text-brand-600 mb-2">Condition</label>
+        <div class="flex gap-2">
+          <button
+            v-for="cond in conditions"
+            :key="cond.value"
+            @click="updateCondition(cond.value)"
+            :class="[
+              'rounded-full px-3 py-1.5 text-xs font-medium transition',
+              item.condition === cond.value
+                ? cond.activeClass
+                : 'bg-brand-50 text-brand-500 hover:bg-brand-100',
+            ]"
+          >
+            {{ cond.label }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Purchase Metadata (collapsible) -->
+      <div class="border-t border-brand-100 pt-4">
+        <button @click="showPurchaseMeta = !showPurchaseMeta" class="flex w-full items-center justify-between">
+          <span class="text-sm font-medium text-brand-800">Purchase Details</span>
+          <span class="text-brand-400 text-xs">{{ showPurchaseMeta ? 'Hide' : 'Show' }}</span>
+        </button>
+        <div v-if="showPurchaseMeta" class="mt-3 space-y-3">
+          <div>
+            <label class="block text-xs font-medium text-brand-600">Brand</label>
+            <input v-model="item.brand" type="text" placeholder="e.g., Uniqlo" class="mt-1 w-full rounded-lg border border-brand-200 px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-brand-600">Price Paid</label>
+            <input v-model="priceDisplay" type="number" step="0.01" placeholder="0.00" class="mt-1 w-full rounded-lg border border-brand-200 px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-brand-600">Purchase Date</label>
+            <input v-model="item.purchaseDate" type="date" class="mt-1 w-full rounded-lg border border-brand-200 px-3 py-2 text-sm" />
+          </div>
+          <button
+            @click="saveLifecycle"
+            :disabled="lifecycleSaving"
+            class="rounded-lg bg-brand-600 px-4 py-2 text-sm text-white hover:bg-brand-700 transition disabled:opacity-50"
+          >
+            {{ lifecycleSaving ? 'Saving...' : 'Save Purchase Details' }}
+          </button>
         </div>
       </div>
 
