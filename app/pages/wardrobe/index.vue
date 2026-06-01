@@ -49,10 +49,11 @@ onMounted(async () => {
     </div>
 
     <div v-else class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-      <div
+      <NuxtLink
         v-for="item in items"
         :key="item.id"
-        class="overflow-hidden rounded-lg bg-white shadow transition hover:shadow-md"
+        :to="`/wardrobe/items/${item.id}`"
+        class="overflow-hidden rounded-lg bg-white shadow transition hover:shadow-md hover:-translate-y-0.5"
       >
         <img :src="item.imageUrl" :alt="item.clothingType" class="aspect-square w-full object-cover" />
         <div class="p-3">
@@ -60,7 +61,7 @@ onMounted(async () => {
           <p class="text-sm text-brand-500">{{ item.colour }}</p>
           <p v-if="item.clothingSubType" class="text-xs text-brand-400 capitalize">{{ item.clothingSubType }}</p>
         </div>
-      </div>
+      </NuxtLink>
     </div>
   </div>
 </template>
