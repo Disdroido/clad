@@ -5,6 +5,7 @@ import {
   timestamp,
   varchar,
   real,
+  integer,
   jsonb,
   pgEnum,
   boolean,
@@ -139,6 +140,21 @@ export const outfits = pgTable('outfits', {
   explanation: text('explanation'),
   rating: real('rating'),
   wornDates: jsonb('worn_dates').$type<string[]>(),
+  wearCount: integer('wear_count').default(0).notNull(),
+  lastWornAt: timestamp('last_worn_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   isArchived: boolean('is_archived').default(false).notNull(),
+})
+
+export const outfitWearEvents = pgTable('outfit_wear_events', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  outfitId: uuid('outfit_id')
+    .notNull()
+    .references(() => outfits.id, { onDelete: 'cascade' }),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  wornDate: timestamp('worn_date').notNull().defaultNow(),
+  notes: text('notes'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
 })
