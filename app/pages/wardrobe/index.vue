@@ -10,12 +10,15 @@ useHead({
 const items = ref<any[]>([])
 const loading = ref(true)
 
-// TODO: Load wardrobe items from API
 onMounted(async () => {
-  setTimeout(() => {
+  try {
+    const data = await $fetch<{ items: any[] }>('/api/wardrobe/items')
+    items.value = data.items
+  } catch {
     items.value = []
+  } finally {
     loading.value = false
-  }, 500)
+  }
 })
 </script>
 
