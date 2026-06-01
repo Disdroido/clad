@@ -11,6 +11,10 @@ interface Trip {
 const trips = ref<Trip[]>([])
 const loading = ref(false)
 
+const emit = defineEmits<{
+  schedule: []
+}>()
+
 onMounted(async () => {
   loading.value = true
   try {
@@ -37,31 +41,30 @@ function getPurposeEmoji(purpose: string) {
 </script>
 
 <template>
-  <div class="rounded-xl bg-white p-6 shadow-sm border border-brand-100">
+  <div class="rounded-xl bg-white p-5 shadow-sm border border-brand-100">
     <div class="mb-4 flex items-center justify-between">
-      <h2 class="text-base font-semibold text-brand-900">✈️ Trips</h2>
+      <h2 class="text-base font-semibold text-brand-900">Trips</h2>
       <NuxtLink to="/trips/new"
-                class="rounded-lg border border-brand-300 px-3 py-1 text-xs font-medium text-brand-700 hover:bg-brand-50 transition">
-        + New Trip
+                class="rounded-lg bg-brand-50 px-3 py-1 text-xs font-medium text-brand-600 hover:bg-brand-100 transition">
+        + New
       </NuxtLink>
     </div>
 
-    <div v-if="loading" class="py-4 text-center text-sm text-brand-400">Loading...</div>
+    <div v-if="loading" class="py-6 text-center text-sm text-brand-400">Loading...</div>
 
-    <div v-else-if="trips.length === 0" class="py-4 text-center">
-      <p class="text-sm text-brand-400">Plan your first trip</p>
+    <div v-else-if="trips.length === 0" class="py-6 text-center">
+      <p class="text-sm text-brand-400">No trips planned yet</p>
     </div>
 
-    <div v-else class="space-y-2">
+    <div v-else class="space-y-1.5">
       <NuxtLink v-for="trip in trips" :key="trip.id"
                 :to="`/trips/${trip.id}`"
-                class="block rounded-lg border border-brand-100 bg-brand-50 p-3 hover:border-brand-300 transition">
-        <div class="flex items-center gap-2">
-          <span>{{ getPurposeEmoji(trip.purpose) }}</span>
+                class="block rounded-lg border border-brand-100 p-2.5 hover:border-brand-300 hover:bg-brand-50 transition">
+        <div class="flex items-center gap-2.5">
+          <span class="text-base flex-shrink-0">{{ getPurposeEmoji(trip.purpose) }}</span>
           <div class="min-w-0 flex-1">
             <p class="truncate text-sm font-medium text-brand-900">{{ trip.name }}</p>
-            <p class="truncate text-xs text-brand-500">{{ trip.destination }}</p>
-            <p class="text-xs text-brand-400">{{ formatDateRange(trip.startDate, trip.endDate) }}</p>
+            <p class="truncate text-xs text-brand-400">{{ trip.destination }} · {{ formatDateRange(trip.startDate, trip.endDate) }}</p>
           </div>
         </div>
       </NuxtLink>

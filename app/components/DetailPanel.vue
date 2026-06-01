@@ -36,21 +36,24 @@ const isEmpty = computed(() => !props.outfits || props.outfits.length === 0)
 </script>
 
 <template>
-  <div v-if="date" class="mt-4 rounded-xl bg-white p-6 shadow-sm border border-brand-100">
+  <div v-if="date" class="rounded-xl bg-white p-5 shadow-sm border border-brand-100">
     <div class="mb-4 flex items-center justify-between">
       <h3 class="text-base font-semibold text-brand-900">{{ formatDateFull }}</h3>
+      <span v-if="!isEmpty" class="rounded-full bg-brand-100 px-2.5 py-0.5 text-xs font-medium text-brand-600">
+        {{ outfits.length }} outfit{{ outfits.length !== 1 ? 's' : '' }}
+      </span>
     </div>
 
-    <!-- Empty state for this date -->
+    <!-- Empty state -->
     <div v-if="isEmpty" class="py-6 text-center">
-      <p class="mb-3 text-sm text-brand-500">Nothing scheduled for this day</p>
+      <p class="mb-3 text-sm text-brand-400">Nothing scheduled for this day</p>
       <button @click="$emit('schedule', dateKey)"
-              class="rounded-lg bg-brand-600 px-4 py-2 text-sm text-white hover:bg-brand-700 transition">
+              class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 transition">
         + Schedule Outfit
       </button>
     </div>
 
-    <!-- Scheduled outfit cards -->
+    <!-- Outfit cards -->
     <div v-else class="space-y-2">
       <ScheduledOutfitCard
         v-for="outfit in outfits" :key="outfit.id"
@@ -59,8 +62,8 @@ const isEmpty = computed(() => !props.outfits || props.outfits.length === 0)
         @remove="(id: string) => $emit('remove', id)"
       />
       <button @click="$emit('schedule', dateKey)"
-              class="mt-3 w-full rounded-lg border border-dashed border-brand-300 py-2 text-sm text-brand-500 hover:text-brand-700 hover:border-brand-500 transition">
-        + Schedule Outfit
+              class="mt-3 w-full rounded-lg border-2 border-dashed border-brand-200 py-2.5 text-sm font-medium text-brand-500 hover:border-brand-400 hover:text-brand-700 transition">
+        + Add another
       </button>
     </div>
   </div>

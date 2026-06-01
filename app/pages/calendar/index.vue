@@ -26,11 +26,12 @@ const selectedDayOutfits = ref<ScheduledOutfit[]>([])
 const showScheduleModal = ref(false)
 const scheduleModalDate = ref('')
 const editingOutfit = ref<ScheduledOutfit | null>(null)
+const currentMonthLabel = ref('')
 
-// Fetch calendar data for a given month/year
 async function fetchMonth(month: number, year: number) {
   loading.value = true
   error.value = false
+  currentMonthLabel.value = new Date(year, month - 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
   try {
     const data: any = await $fetch('/api/calendar', {
       params: { month, year }
@@ -44,7 +45,6 @@ async function fetchMonth(month: number, year: number) {
   }
 }
 
-// When a date is clicked
 function onDateClick(date: Date) {
   selectedDate.value = date
   const dateKey = date.toISOString().split('T')[0]
@@ -53,6 +53,7 @@ function onDateClick(date: Date) {
 }
 
 function onMonthChange(month: number, year: number) {
+  selectedDate.value = null
   fetchMonth(month, year)
 }
 
@@ -63,10 +64,8 @@ function openScheduleModal(dateKey?: string) {
 }
 
 function onScheduled() {
-  // Refresh current month
   const now = selectedDate.value || new Date()
   fetchMonth(now.getMonth() + 1, now.getFullYear())
-  // If a date was selected, refresh its outfits
   if (selectedDate.value) {
     onDateClick(selectedDate.value)
   }
@@ -75,11 +74,9 @@ function onScheduled() {
 async function removeScheduledOutfit(id: string) {
   try {
     await $fetch(`/api/calendar/${id}`, { method: 'DELETE' })
-    // Refresh
     if (selectedDate.value) {
       const dateKey = selectedDate.value.toISOString().split('T')[0]
       selectedDayOutfits.value = selectedDayOutfits.value.filter(o => o.id !== id)
-      // Also remove from scheduledDates cache
       const dayIdx = scheduledDates.value.findIndex(d => d.date === dateKey)
       if (dayIdx >= 0) {
         scheduledDates.value[dayIdx].outfits = scheduledDates.value[dayIdx].outfits.filter(o => o.id !== id)
@@ -91,7 +88,6 @@ async function removeScheduledOutfit(id: string) {
   }
 }
 
-// Load current month on mount
 onMounted(() => {
   const now = new Date()
   fetchMonth(now.getMonth() + 1, now.getFullYear())
@@ -102,9 +98,10 @@ onMounted(() => {
   <div>
     <div class="mb-6 flex items-center justify-between">
       <h1 class="text-2xl font-bold text-brand-950">Calendar</h1>
-      <NuxtLink to="/outfits" class="rounded-lg border border-brand-300 px-4 py-2 text-sm text-brand-700 hover:bg-brand-50 transition">
-        ✨ + New Outfit
-      </NuxtLink>
+      <button @click="openScheduleModal()"
+              class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 transition">
+        + Schedule
+      </button>
     </div>
 
     <!-- Loading state -->
@@ -113,7 +110,7 @@ onMounted(() => {
     </div>
 
     <!-- Error state -->
-    <div v-else-if="error" class="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
+    <div v-else-if="error" class="rounded-xl border border-red-200 bg-red-50 p-6 text-center">
       <p class="mb-3 text-red-700">Couldn't load your schedule. Please try again.</p>
       <button @click="fetchMonth(new Date().getMonth() + 1, new Date().getFullYear())"
               class="rounded-lg bg-brand-600 px-4 py-2 text-sm text-white hover:bg-brand-700 transition">
@@ -122,45 +119,36 @@ onMounted(() => {
     </div>
 
     <!-- Content -->
-    <div v-else class="flex flex-col gap-6 md:flex-row">
-      <!-- Left column: Calendar grid + detail panel -->
-      <div class="flex-1">
-        <!-- Empty state -->
-        <div v-if="!loading && scheduledDates.length === 0 && !selectedDate"
-             class="mb-4 rounded-lg border-2 border-dashed border-brand-200 py-12 text-center">
-          <p class="mb-2 text-lg font-medium text-brand-600">No outfits scheduled yet</p>
-          <p class="mb-4 text-sm text-brand-400">Schedule an outfit or plan a trip to get started</p>
-          <button @click="openScheduleModal()"
-                  class="rounded-lg bg-brand-600 px-6 py-3 text-white hover:bg-brand-700 transition">
-            📅 Schedule Outfit
-          </button>
+    <div v-else class="flex flex-col gap-6 lg:flex-row">
+      <!-- Left: Calendar + detail -->
+      <div class="flex-1 min-w-0">
+        <!-- Calendar card -->
+        <div class="overflow-hidden rounded-xl bg-white border border-brand-100 shadow-sm">
+          <CalendarGrid
+            :scheduled-dates="scheduledDates"
+            :loading="loading"
+            @date-click="onDateClick"
+            @month-change="onMonthChange"
+          />
         </div>
 
-        <!-- Calendar grid -->
-        <CalendarGrid
-          :scheduled-dates="scheduledDates"
-          :loading="loading"
-          @date-click="onDateClick"
-          @month-change="onMonthChange"
-        />
-
-        <!-- Detail panel (shown when date selected) -->
+        <!-- Detail panel -->
         <DetailPanel
           v-if="selectedDate"
           :date="selectedDate"
           :outfits="selectedDayOutfits"
+          class="mt-4"
           @schedule="openScheduleModal"
           @remove="removeScheduledOutfit"
         />
       </div>
 
-      <!-- Right sidebar: Trip list (desktop) -->
-      <div class="w-full md:w-72 shrink-0">
-        <TripSidebar />
+      <!-- Right: Trip sidebar (desktop) -->
+      <div class="w-full lg:w-64 shrink-0">
+        <TripSidebar @schedule="openScheduleModal" />
       </div>
     </div>
 
-    <!-- Schedule modal -->
     <ScheduleModal
       :show="showScheduleModal"
       :selected-date="scheduleModalDate"
