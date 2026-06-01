@@ -88,6 +88,10 @@ export const patternEnum = pgEnum('pattern', [
   'solid', 'striped', 'checked', 'floral', 'graphic', 'abstract',
 ])
 
+export const conditionEnum = pgEnum('condition', [
+  'new', 'good', 'worn', 'needs_repair',
+])
+
 // ----------------------------------------------------------------------------
 // App tables. user_id is `text` to match the Better Auth `user.id` column.
 // ----------------------------------------------------------------------------
@@ -125,8 +129,28 @@ export const wardrobeItems = pgTable('wardrobe_items', {
   season: seasonEnum('season').default('all_season'),
   isFavorite: boolean('is_favorite').default(false),
   aiConfidence: real('ai_confidence'),
+  isClean: boolean('is_clean').default(true).notNull(),
+  condition: conditionEnum('condition').default('good'),
+  brand: varchar('brand', { length: 200 }),
+  pricePaid: integer('price_paid'),
+  purchaseDate: timestamp('purchase_date'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   isArchived: boolean('is_archived').default(false).notNull(),
+})
+
+export const wishlistItems = pgTable('wishlist_items', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 255 }).notNull(),
+  category: clothingTypeEnum('category').notNull(),
+  priority: varchar('priority', { length: 20 }).notNull().default('medium'),
+  notes: text('notes'),
+  url: text('url'),
+  isPurchased: boolean('is_purchased').default(false).notNull(),
+  purchasedAt: timestamp('purchased_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
 })
 
 export const outfits = pgTable('outfits', {
