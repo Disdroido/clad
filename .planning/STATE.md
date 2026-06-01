@@ -4,12 +4,12 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 06
 status: Executing Phase 06
-last_updated: "2026-06-01T06:30:26.582Z"
+last_updated: "2026-06-01T06:35:26.860Z"
 progress:
   total_phases: 8
   completed_phases: 4
   total_plans: 15
-  completed_plans: 13
+  completed_plans: 14
 ---
 
 # Current State
@@ -73,6 +73,9 @@ progress:
 - [Phase 06-social-sharing]: Shared outfit IDs use 8-char hex shortId (first 8 chars of UUID sans dashes) for cleaner share URLs
 - [Phase 06-social-sharing]: Public endpoints use getOptionalUserId for optional viewer context without blocking anonymous access
 - [Phase 06-social-sharing]: Engagement endpoints toggle with single POST call (insert if not exists, delete if exists)
+- [Phase 06-social-sharing]: Share page uses no layout (no definePageMeta) for clean marketing-style chrome-free experience
+- [Phase 06-social-sharing]: Discover and profile pages use default layout (sidebar + bottom nav) since they are within the app
+- [Phase 06-social-sharing]: og:image falls back to first item thumbnailUrl or imageUrl, then Clad logo for social preview cards
 
 ## Blockers
 
