@@ -115,13 +115,14 @@
 ---
 
 ## Phase 07: Smart Wardrobe Enhancements
-**Status:** 🔮 Proposed
-**Goal:** Add advanced wardrobe management features like shopping lists, laundry tracking, and item lifecycle.
+**Status:** 🚧 Planned (3/3 plans created)
+**Goal:** Add practical wardrobe management: manual shopping wishlist with purchase tracking, per-item laundry clean/dirty status with outfit generation filtering, and item lifecycle with condition states (new/good/worn/needs_repair) and purchase metadata.
 
 **Plans:**
-- [ ] 07-01-PLAN.md — Shopping/wishlist feature
-- [ ] 07-02-PLAN.md — Laundry and wear tracking for items
-- [ ] 07-03-PLAN.md — Item condition and lifecycle management
+3/3 plans created
+- [x] 07-01-PLAN.md — Schema foundation + Wishlist CRUD + sub-nav tabs (Wave 1, 2 tasks)
+- [x] 07-02-PLAN.md — Laundry/Lifecycle API endpoints + Engine dirty filter + Condition penalty + Generate integration (Wave 2, 2 tasks)
+- [x] 07-03-PLAN.md — Laundry page UI + Item detail enhancements + Wardrobe list indicators + Generate toggles (Wave 3, 3 tasks)
 
 **Requirements:**
 - [SMART-01] User can add items to a shopping wishlist

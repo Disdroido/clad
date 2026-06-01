@@ -1,30 +1,11 @@
 <script setup lang="ts">
-interface Trip {
-  id: string
-  name: string
-  destination: string
-  startDate: string
-  endDate: string
-  purpose: string
-}
-
-const trips = ref<Trip[]>([])
-const loading = ref(false)
+const tripStore = useTripStore()
 
 const emit = defineEmits<{
   schedule: []
 }>()
 
-onMounted(async () => {
-  loading.value = true
-  try {
-    trips.value = await $fetch('/api/trips')
-  } catch {
-    trips.value = []
-  } finally {
-    loading.value = false
-  }
-})
+onMounted(() => tripStore.fetchTrips())
 
 function formatDateRange(start: string, end: string) {
   const s = new Date(start).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
@@ -50,14 +31,14 @@ function getPurposeEmoji(purpose: string) {
       </NuxtLink>
     </div>
 
-    <div v-if="loading" class="py-6 text-center text-sm text-brand-400">Loading...</div>
+    <div v-if="tripStore.loading" class="py-6 text-center text-sm text-brand-400">Loading...</div>
 
-    <div v-else-if="trips.length === 0" class="py-6 text-center">
+    <div v-else-if="tripStore.trips.length === 0" class="py-6 text-center">
       <p class="text-sm text-brand-400">No trips planned yet</p>
     </div>
 
     <div v-else class="space-y-1.5">
-      <NuxtLink v-for="trip in trips" :key="trip.id"
+      <NuxtLink v-for="trip in tripStore.trips" :key="trip.id"
                 :to="`/trips/${trip.id}`"
                 class="block rounded-lg border border-brand-100 p-2.5 hover:border-brand-300 hover:bg-brand-50 transition">
         <div class="flex items-center gap-2.5">

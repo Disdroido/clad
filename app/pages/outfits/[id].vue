@@ -2,6 +2,9 @@
 const route = useRoute()
 const router = useRouter()
 
+const outfitStore = useOutfitStore()
+const calendarStore = useCalendarStore()
+
 const outfit = ref<any>(null)
 const loading = ref(true)
 const archiving = ref(false)
@@ -10,12 +13,10 @@ const wearSuccess = ref(false)
 const userRating = ref<number>(0)
 const savingRating = ref(false)
 
-// Share state
 const sharing = ref(false)
 const shareUrl = ref('')
 const shareCopied = ref(false)
 
-// Schedule state
 const scheduledOutfit = ref<any>(null)
 const showScheduleModal = ref(false)
 const schedulingDate = ref('')
@@ -29,7 +30,7 @@ useHead({ title: 'Outfit — Clad' })
 async function fetchOutfit() {
   loading.value = true
   try {
-    outfit.value = await $fetch(`/api/outfits/${route.params.id}`)
+    outfit.value = await outfitStore.fetchOutfit(route.params.id as string)
     userRating.value = outfit.value?.rating || 0
   } catch (err: any) {
     const msg = err?.data?.message || err?.message || 'Failed to load outfit'
@@ -48,6 +49,9 @@ async function archiveOutfit() {
       method: 'PATCH',
       body: { isArchived: true },
     })
+    outfitStore.invalidateOutfit(route.params.id as string)
+    outfitStore.invalidate()
+    calendarStore.invalidate()
     router.push('/outfits')
   } catch (err: any) {
     const msg = err?.data?.message || err?.message || 'Failed to archive outfit'
@@ -64,35 +68,32 @@ async function logWear() {
     await $fetch('/api/outfits/' + outfit.value.id + '/wear', { method: 'POST' })
     wearSuccess.value = true
     setTimeout(() => { wearSuccess.value = false }, 2000)
-    await fetchOutfit() // refresh to get updated wearCount
+    outfitStore.invalidateOutfit(outfit.value.id)
+    await fetchOutfit()
   } catch { /* ignore */ }
   finally { wearing.value = false }
 }
 
 async function setRating(rating: number) {
   savingRating.value = true
-  userRating.value = rating // optimistic
+  userRating.value = rating
   try {
     await $fetch('/api/outfits/' + outfit.value.id + '/rating', {
       method: 'PATCH',
       body: { rating }
     })
+    outfitStore.invalidateOutfit(outfit.value.id)
   } catch {
-    userRating.value = outfit.value?.rating || 0 // revert
+    userRating.value = outfit.value?.rating || 0
   }
   finally { savingRating.value = false }
 }
 
 async function checkExistingSchedule() {
   try {
-    const data: any = await $fetch('/api/calendar', {
-      params: {
-        month: new Date().getMonth() + 1,
-        year: new Date().getFullYear()
-      }
-    })
-    // Find if this outfit is scheduled
-    for (const day of data.dates || []) {
+    const now = new Date()
+    const dates = await calendarStore.fetchCalendar(now.getMonth() + 1, now.getFullYear())
+    for (const day of dates || []) {
       const match = day.outfits.find((o: any) => o.outfitId === route.params.id)
       if (match) {
         scheduledOutfit.value = match
@@ -117,6 +118,7 @@ async function scheduleFromDetail() {
     })
     scheduledOutfit.value = result
     showScheduleModal.value = false
+    calendarStore.invalidate()
   } catch (err: any) {
     scheduleError.value = err?.data?.message || 'Couldn\'t schedule outfit. Please try again.'
   } finally {
@@ -183,7 +185,7 @@ onMounted(() => {
 
       <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
         <NuxtLink
-          v-for="item in outfit.items"
+          v-for="item in outfit.items.filter(i => i.id)"
           :key="item.id"
           :to="`/wardrobe/items/${item.id}`"
           class="overflow-hidden rounded-lg border border-brand-100 hover:shadow-md transition"
@@ -223,7 +225,6 @@ onMounted(() => {
 
       <!-- Schedule section -->
       <div class="mb-4">
-        <!-- Scheduled badge -->
         <div v-if="scheduledOutfit"
              class="mb-3 inline-flex items-center gap-1.5 rounded-full bg-brand-100 px-3 py-1 text-sm text-brand-700">
           📅 Scheduled for {{ new Date(scheduledOutfit.scheduledDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) }}

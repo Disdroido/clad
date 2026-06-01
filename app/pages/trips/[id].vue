@@ -2,6 +2,9 @@
 const route = useRoute()
 const router = useRouter()
 
+const tripStore = useTripStore()
+const calendarStore = useCalendarStore()
+
 definePageMeta({ layout: 'default' })
 useHead({ title: 'Trip — Clad' })
 
@@ -35,7 +38,7 @@ function formatDateRange(start: string, end: string) {
 
 onMounted(async () => {
   try {
-    trip.value = await $fetch(`/api/trips/${route.params.id}`)
+    trip.value = await tripStore.fetchTrip(route.params.id as string)
   } catch {
     error.value = 'Trip not found'
   } finally {
@@ -63,6 +66,8 @@ async function deleteTrip() {
   deleting.value = true
   try {
     await $fetch(`/api/trips/${route.params.id}`, { method: 'DELETE' })
+    tripStore.invalidate()
+    calendarStore.invalidate()
     router.push('/trips')
   } catch {
     alert('Couldn\'t delete trip.')
@@ -126,7 +131,7 @@ async function deleteTrip() {
         </div>
       </div>
 
-      <!-- Scheduled Outfits section (placeholder — will be populated by future enhancement) -->
+      <!-- Scheduled Outfits section -->
       <div class="rounded-xl border border-brand-100 bg-white p-6 shadow-sm">
         <h2 class="mb-3 text-base font-semibold text-brand-900">Scheduled Outfits</h2>
         <p class="text-sm text-brand-400">Outfits scheduled during this trip will appear here.</p>

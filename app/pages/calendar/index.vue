@@ -2,6 +2,8 @@
 definePageMeta({ layout: 'default' })
 useHead({ title: 'Calendar — Clad' })
 
+const calendarStore = useCalendarStore()
+
 interface ScheduledOutfit {
   id: string
   outfitId: string
@@ -25,7 +27,6 @@ const selectedDate = ref<Date | null>(null)
 const selectedDayOutfits = ref<ScheduledOutfit[]>([])
 const showScheduleModal = ref(false)
 const scheduleModalDate = ref('')
-const editingOutfit = ref<ScheduledOutfit | null>(null)
 const currentMonthLabel = ref('')
 
 async function fetchMonth(month: number, year: number) {
@@ -33,10 +34,8 @@ async function fetchMonth(month: number, year: number) {
   error.value = false
   currentMonthLabel.value = new Date(year, month - 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
   try {
-    const data: any = await $fetch('/api/calendar', {
-      params: { month, year }
-    })
-    scheduledDates.value = data?.dates || []
+    const dates = await calendarStore.fetchCalendar(month, year)
+    scheduledDates.value = dates
   } catch {
     error.value = true
     scheduledDates.value = []
@@ -59,12 +58,12 @@ function onMonthChange(month: number, year: number) {
 
 function openScheduleModal(dateKey?: string) {
   scheduleModalDate.value = dateKey || ''
-  editingOutfit.value = null
   showScheduleModal.value = true
 }
 
 function onScheduled() {
   const now = selectedDate.value || new Date()
+  calendarStore.invalidate()
   fetchMonth(now.getMonth() + 1, now.getFullYear())
   if (selectedDate.value) {
     onDateClick(selectedDate.value)
@@ -83,6 +82,7 @@ async function removeScheduledOutfit(id: string) {
         scheduledDates.value[dayIdx].count = scheduledDates.value[dayIdx].outfits.length
       }
     }
+    calendarStore.invalidate()
   } catch {
     alert('Could not remove scheduled outfit.')
   }

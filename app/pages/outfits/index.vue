@@ -2,22 +2,9 @@
 definePageMeta({ layout: 'default' })
 useHead({ title: 'My Outfits — Clad' })
 
-const outfits = ref<any[]>([])
-const loading = ref(true)
+const outfitStore = useOutfitStore()
 
-async function fetchOutfits() {
-  loading.value = true
-  try {
-    const res = await $fetch('/api/outfits')
-    outfits.value = res.outfits
-  } catch {
-    outfits.value = []
-  } finally {
-    loading.value = false
-  }
-}
-
-onMounted(fetchOutfits)
+onMounted(() => outfitStore.fetchOutfits())
 </script>
 
 <template>
@@ -32,12 +19,12 @@ onMounted(fetchOutfits)
       </NuxtLink>
     </div>
 
-    <div v-if="loading" class="flex justify-center py-20">
+    <div v-if="outfitStore.loading" class="flex justify-center py-20">
       <span class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-brand-200 border-t-brand-600" />
     </div>
 
     <div
-      v-else-if="outfits.length === 0"
+      v-else-if="outfitStore.outfits.length === 0"
       class="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-brand-200 py-20"
     >
       <p class="mb-4 text-brand-500">No outfits yet</p>
@@ -51,7 +38,7 @@ onMounted(fetchOutfits)
 
     <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       <NuxtLink
-        v-for="outfit in outfits"
+        v-for="outfit in outfitStore.outfits"
         :key="outfit.id"
         :to="`/outfits/${outfit.id}`"
         class="block rounded-xl bg-white p-4 shadow-sm border border-brand-100 hover:shadow-md transition"

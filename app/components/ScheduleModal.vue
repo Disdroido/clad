@@ -1,10 +1,4 @@
 <script setup lang="ts">
-interface OutfitOption {
-  id: string
-  name: string
-  occasion: string
-}
-
 const props = defineProps<{
   show: boolean
   selectedDate?: string
@@ -15,12 +9,14 @@ const emit = defineEmits<{
   scheduled: []
 }>()
 
+const outfitStore = useOutfitStore()
+const calendarStore = useCalendarStore()
+
 const selectedOutfitId = ref('')
 const scheduledDate = ref(props.selectedDate || '')
 const notes = ref('')
 const saving = ref(false)
 const error = ref('')
-const outfits = ref<OutfitOption[]>([])
 const loadingOutfits = ref(false)
 
 watch(() => props.show, async (val) => {
@@ -36,12 +32,9 @@ watch(() => props.show, async (val) => {
 async function loadOutfits() {
   loadingOutfits.value = true
   try {
-    const data: any[] = await $fetch('/api/outfits')
-    outfits.value = data
-      .filter(o => !o.isArchived)
-      .map(o => ({ id: o.id, name: o.name || 'Unnamed Outfit', occasion: o.occasion || '' }))
+    await outfitStore.fetchOutfits(true)
   } catch {
-    outfits.value = []
+    // ignore
   } finally {
     loadingOutfits.value = false
   }
@@ -60,6 +53,7 @@ async function schedule() {
         notes: notes.value || null,
       },
     })
+    calendarStore.invalidate()
     emit('scheduled')
     emit('close')
   } catch (err: any) {
@@ -96,17 +90,17 @@ async function schedule() {
         <div class="mb-4">
           <label class="mb-1.5 block text-sm font-medium text-brand-700">Outfit</label>
           <div v-if="loadingOutfits" class="py-6 text-center text-sm text-brand-400">Loading outfits...</div>
-          <div v-else-if="outfits.length === 0" class="py-6 text-center text-sm text-brand-400">
+          <div v-else-if="outfitStore.outfits.length === 0" class="py-6 text-center text-sm text-brand-400">
             No outfits yet. <NuxtLink to="/outfits" class="text-brand-600 underline">Create one first</NuxtLink>
           </div>
           <div v-else class="max-h-52 space-y-1 overflow-y-auto">
-            <button v-for="outfit in outfits" :key="outfit.id"
+            <button v-for="outfit in outfitStore.outfits" :key="outfit.id"
                     @click="selectedOutfitId = outfit.id"
                     class="w-full rounded-lg border px-3 py-2.5 text-left text-sm transition"
                     :class="selectedOutfitId === outfit.id
                       ? 'border-brand-500 bg-brand-50 text-brand-900 ring-1 ring-brand-200'
                       : 'border-brand-200 text-brand-700 hover:border-brand-300'">
-              <span class="font-medium">{{ outfit.name }}</span>
+              <span class="font-medium">{{ outfit.name || 'Unnamed Outfit' }}</span>
               <span v-if="outfit.occasion" class="ml-2 text-xs text-brand-400 capitalize">({{ outfit.occasion }})</span>
             </button>
           </div>

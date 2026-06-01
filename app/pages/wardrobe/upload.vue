@@ -3,14 +3,11 @@ import { ref, computed, watch } from 'vue'
 import { useFileDialog } from '@vueuse/core'
 
 const router = useRouter()
+const wardrobeStore = useWardrobeStore()
+const insightsStore = useInsightsStore()
 
-definePageMeta({
-  layout: 'default'
-})
-
-useHead({
-  title: 'Upload — Clad'
-})
+definePageMeta({ layout: 'default' })
+useHead({ title: 'Upload — Clad' })
 
 interface AnalysisResult {
   clothingType: string
@@ -70,12 +67,9 @@ async function compressImage(file: File, maxDimension = 1024, quality = 0.8): Pr
 
 function statusLabel(item: UploadItem): string {
   switch (item.status) {
-    case 'pending':
-      return 'Ready to analyze'
-    case 'uploading':
-      return 'Uploading...'
-    case 'analyzing':
-      return 'AI is analyzing...'
+    case 'pending': return 'Ready to analyze'
+    case 'uploading': return 'Uploading...'
+    case 'analyzing': return 'AI is analyzing...'
     case 'done':
       if (item.saved) return 'Saved to wardrobe'
       if (item.result) {
@@ -83,23 +77,20 @@ function statusLabel(item: UploadItem): string {
         return `${item.result.clothingType}${sub} — ${item.result.colour} (${Math.round(item.result.confidence * 100)}% confident)`
       }
       return 'Analysis complete'
-    case 'error':
-      return item.error || 'Upload failed'
-    default:
-      return ''
+    case 'error': return item.error || 'Upload failed'
+    default: return ''
   }
 }
 
 const { files, open, reset } = useFileDialog({
   accept: 'image/*',
   multiple: true,
-  capture: 'environment', // Prefer rear camera on mobile
+  capture: 'environment',
 })
 
 const uploadItems = ref<UploadItem[]>([])
 const processing = ref(false)
 
-// Trigger file picker on mount for mobile camera
 function handleCapture() {
   open()
 }
@@ -193,6 +184,8 @@ async function saveToWardrobe() {
   }
 
   processing.value = false
+  wardrobeStore.invalidate()
+  insightsStore.invalidate()
   router.push('/wardrobe')
 }
 
@@ -268,7 +261,6 @@ watch(files, onFilesSelected)
           </button>
         </div>
 
-        <!-- Editable labels when done -->
         <div v-if="item.status === 'done' && item.result" class="mt-4 grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-medium text-brand-600">Type</label>

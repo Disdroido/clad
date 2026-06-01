@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 
-definePageMeta({
-  layout: 'default'
-})
+definePageMeta({ layout: 'default' })
 
 const route = useRoute()
 const router = useRouter()
 const id = route.params.id as string
+
+const wardrobeStore = useWardrobeStore()
+const outfitStore = useOutfitStore()
 
 interface Item {
   id: string
@@ -27,10 +28,23 @@ const loading = ref(true)
 const saving = ref(false)
 const error = ref('')
 const saved = ref(false)
+const itemOutfits = ref<any[]>([])
+const loadingOutfits = ref(false)
+
+async function fetchItemOutfits() {
+  loadingOutfits.value = true
+  try {
+    itemOutfits.value = await wardrobeStore.fetchItemOutfits(id)
+  } catch {
+    itemOutfits.value = []
+  } finally {
+    loadingOutfits.value = false
+  }
+}
 
 onMounted(async () => {
   try {
-    item.value = await $fetch(`/api/wardrobe/items/${id}`)
+    item.value = await wardrobeStore.fetchItem(id)
   } catch {
     error.value = 'Item not found'
   } finally {
@@ -57,6 +71,9 @@ async function save() {
       },
     })
     saved.value = true
+    wardrobeStore.invalidateItem(id)
+    wardrobeStore.invalidate()
+    outfitStore.invalidate()
     setTimeout(() => { saved.value = false }, 2000)
   } catch {
     error.value = 'Failed to save'
@@ -66,20 +83,6 @@ async function save() {
 }
 
 const archiving = ref(false)
-const itemOutfits = ref<any[]>([])
-const loadingOutfits = ref(false)
-
-async function fetchItemOutfits() {
-  loadingOutfits.value = true
-  try {
-    const data: any = await $fetch(`/api/wardrobe/items/${id}/outfits`)
-    itemOutfits.value = data.outfits ?? []
-  } catch {
-    itemOutfits.value = []
-  } finally {
-    loadingOutfits.value = false
-  }
-}
 
 async function archiveItem() {
   if (!item.value || !confirm('Archive this item? You can restore it from Settings.')) return
@@ -89,6 +92,8 @@ async function archiveItem() {
       method: 'PATCH',
       body: { isArchived: true },
     })
+    wardrobeStore.invalidate()
+    outfitStore.invalidate()
     router.push('/wardrobe')
   } catch {
     error.value = 'Failed to archive item'

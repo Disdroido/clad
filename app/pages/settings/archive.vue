@@ -2,27 +2,13 @@
 definePageMeta({ layout: 'default' })
 useHead({ title: 'Archive — Clad' })
 
+const settingsStore = useSettingsStore()
+
 const activeTab = ref<'outfits' | 'items'>('outfits')
-const outfits = ref<any[]>([])
-const items = ref<any[]>([])
-const loading = ref(false)
 const selected = ref<Set<string>>(new Set())
 
 async function fetchArchived() {
-  loading.value = true
-  try {
-    const [outfitsRes, itemsRes] = await Promise.all([
-      $fetch<{ outfits: any[] }>('/api/archive/outfits'),
-      $fetch<{ items: any[] }>('/api/archive/items'),
-    ])
-    outfits.value = outfitsRes.outfits
-    items.value = itemsRes.items
-  } catch {
-    outfits.value = []
-    items.value = []
-  } finally {
-    loading.value = false
-  }
+  await settingsStore.fetchArchive(true)
 }
 
 function toggle(id: string) {
@@ -36,7 +22,7 @@ function toggle(id: string) {
 }
 
 function toggleAll() {
-  const list = activeTab.value === 'outfits' ? outfits.value : items.value
+  const list = activeTab.value === 'outfits' ? settingsStore.archivedOutfits : settingsStore.archivedItems
   if (selected.value.size === list.length) {
     selected.value = new Set()
   } else {
@@ -46,7 +32,6 @@ function toggleAll() {
 
 async function restoreSelected() {
   if (selected.value.size === 0) return
-  const list = activeTab.value === 'outfits' ? outfits.value : items.value
   const endpoint = activeTab.value === 'outfits' ? '/api/outfits' : '/api/wardrobe/items'
 
   for (const id of selected.value) {
@@ -59,6 +44,7 @@ async function restoreSelected() {
   }
 
   selected.value = new Set()
+  settingsStore.invalidateArchive()
   await fetchArchived()
 }
 
@@ -77,6 +63,7 @@ async function deleteSelected() {
   } catch { /* ignore */ }
 
   selected.value = new Set()
+  settingsStore.invalidateArchive()
   await fetchArchived()
 }
 
@@ -98,25 +85,25 @@ onMounted(fetchArchived)
         class="flex-1 rounded-md py-2 text-sm font-medium transition"
         :class="activeTab === 'outfits' ? 'bg-white text-brand-900 shadow-sm' : 'text-brand-600 hover:text-brand-800'"
       >
-        Outfits ({{ outfits.length }})
+        Outfits ({{ settingsStore.archivedOutfits.length }})
       </button>
       <button
         @click="activeTab = 'items'; selected = new Set()"
         class="flex-1 rounded-md py-2 text-sm font-medium transition"
         :class="activeTab === 'items' ? 'bg-white text-brand-900 shadow-sm' : 'text-brand-600 hover:text-brand-800'"
       >
-        Clothing ({{ items.length }})
+        Clothing ({{ settingsStore.archivedItems.length }})
       </button>
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" class="flex justify-center py-20">
+    <div v-if="!settingsStore.archiveLoaded" class="flex justify-center py-20">
       <span class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-brand-200 border-t-brand-600" />
     </div>
 
     <!-- Empty -->
     <div
-      v-else-if="(activeTab === 'outfits' ? outfits : items).length === 0"
+      v-else-if="(activeTab === 'outfits' ? settingsStore.archivedOutfits : settingsStore.archivedItems).length === 0"
       class="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-brand-200 py-20"
     >
       <p class="text-brand-500">No archived {{ activeTab === 'outfits' ? 'outfits' : 'clothing' }}</p>
@@ -129,8 +116,8 @@ onMounted(fetchArchived)
         <label class="flex items-center gap-2 text-sm text-brand-600 cursor-pointer">
           <input
             type="checkbox"
-            :checked="selected.size === (activeTab === 'outfits' ? outfits : items).length"
-            :indeterminate="selected.size > 0 && selected.size < (activeTab === 'outfits' ? outfits : items).length"
+            :checked="selected.size === (activeTab === 'outfits' ? settingsStore.archivedOutfits : settingsStore.archivedItems).length"
+            :indeterminate="selected.size > 0 && selected.size < (activeTab === 'outfits' ? settingsStore.archivedOutfits : settingsStore.archivedItems).length"
             @change="toggleAll"
             class="h-4 w-4 rounded border-brand-300 text-brand-600"
           />
@@ -157,7 +144,7 @@ onMounted(fetchArchived)
       <!-- Outfits grid -->
       <div v-if="activeTab === 'outfits'" class="space-y-3">
         <div
-          v-for="outfit in outfits"
+          v-for="outfit in settingsStore.archivedOutfits"
           :key="outfit.id"
           class="flex items-center gap-4 rounded-lg bg-white p-4 shadow-sm border border-brand-100"
         >
@@ -191,7 +178,7 @@ onMounted(fetchArchived)
       <!-- Items grid -->
       <div v-if="activeTab === 'items'" class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
         <div
-          v-for="item in items"
+          v-for="item in settingsStore.archivedItems"
           :key="item.id"
           class="relative overflow-hidden rounded-lg border border-brand-100 bg-white"
         >

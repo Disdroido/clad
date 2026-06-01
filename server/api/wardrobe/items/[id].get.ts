@@ -8,6 +8,10 @@ export default defineEventHandler(async (event) => {
   const db = useDb()
   const id = getRouterParam(event, 'id')
 
+  if (!id || id === 'undefined') {
+    throw createError({ statusCode: 400, message: 'Invalid item ID' })
+  }
+
   const [item] = await db
     .select()
     .from(wardrobeItems)

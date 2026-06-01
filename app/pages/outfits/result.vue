@@ -5,6 +5,7 @@ definePageMeta({ layout: 'default' })
 
 const route = useRoute()
 const router = useRouter()
+const outfitStore = useOutfitStore()
 
 const occasion = ref(route.query.occasion as string || '')
 const outfitResult = ref<any>(null)
@@ -12,7 +13,6 @@ const loading = ref(true)
 const saving = ref(false)
 const showWeatherFallback = ref(false)
 
-// Extract lat/lon from route query (passed from generate.vue)
 const lat = computed(() => route.query.lat ? parseFloat(route.query.lat as string) : undefined)
 const lon = computed(() => route.query.lon ? parseFloat(route.query.lon as string) : undefined)
 
@@ -29,7 +29,6 @@ async function generateOutfit() {
       method: 'POST',
       body,
     })
-    // Show fallback banner when weather was unavailable (D-05)
     if ((outfitResult.value as any)?.weatherFallback) {
       showWeatherFallback.value = true
       setTimeout(() => { showWeatherFallback.value = false }, 6000)
@@ -63,6 +62,7 @@ async function saveOutfit() {
         itemIds: items.map((i: any) => i.id),
       },
     })
+    outfitStore.invalidate()
     router.push(`/outfits/${saved.id}`)
   } catch (err: any) {
     const msg = err?.data?.message || err?.message || 'Failed to save outfit'
@@ -109,7 +109,6 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Weather fallback toast (D-05) -->
       <div
         v-if="showWeatherFallback"
         class="mb-4 rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-700"

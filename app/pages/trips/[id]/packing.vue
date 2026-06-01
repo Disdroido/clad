@@ -2,6 +2,8 @@
 const route = useRoute()
 const router = useRouter()
 
+const tripStore = useTripStore()
+
 definePageMeta({ layout: 'default' })
 useHead({ title: 'Packing List — Clad' })
 
@@ -50,10 +52,8 @@ async function loadPackingList() {
   error.value = false
   wardrobeEmpty.value = false
   try {
-    // Fetch trip info
-    trip.value = await $fetch(`/api/trips/${route.params.id}`)
+    trip.value = await tripStore.fetchTrip(route.params.id as string)
 
-    // Generate packing list
     const result: any = await $fetch('/api/calendar/packing', {
       method: 'POST',
       body: { tripId: route.params.id },
@@ -67,7 +67,6 @@ async function loadPackingList() {
 
     if (result.success && result.data?.grouped) {
       grouped.value = result.data.grouped
-      // Initialize all items as packed by default
       for (const items of Object.values(result.data.grouped) as PackingItemData[][]) {
         for (const item of items) {
           packedItems.value[item.itemId] = true
@@ -87,8 +86,6 @@ async function savePackingList() {
   saving.value = true
   saveMessage.value = ''
   try {
-    // Persist packed state to localStorage for now
-    // (server persistence is a future enhancement per research recommendation)
     localStorage.setItem(`packing_${route.params.id}`, JSON.stringify(packedItems.value))
     saveMessage.value = '✅ Packing list saved!'
     setTimeout(() => { saveMessage.value = '' }, 3000)
@@ -99,7 +96,6 @@ async function savePackingList() {
   }
 }
 
-// Load saved state from localStorage
 function loadSavedState() {
   try {
     const saved = localStorage.getItem(`packing_${route.params.id}`)

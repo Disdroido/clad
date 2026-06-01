@@ -3,6 +3,7 @@ definePageMeta({ layout: 'default' })
 useHead({ title: 'New Trip — Clad' })
 
 const router = useRouter()
+const tripStore = useTripStore()
 
 const name = ref('')
 const destination = ref('')
@@ -48,6 +49,7 @@ async function saveTrip() {
         purpose: purpose.value,
       },
     })
+    tripStore.invalidate()
     router.push(`/trips/${trip.id}`)
   } catch (err: any) {
     error.value = err?.data?.message || 'Couldn\'t save trip. Please try again.'
@@ -68,21 +70,18 @@ async function saveTrip() {
 
       <div class="rounded-xl bg-white p-6 shadow-sm border border-brand-100">
         <div class="space-y-4">
-          <!-- Trip Name -->
           <div>
             <label class="mb-1 block text-sm font-medium text-brand-700">Trip Name</label>
             <input v-model="name" type="text" placeholder="e.g. Summer Vacation"
                    class="w-full rounded-lg border border-brand-200 px-3 py-2 text-sm text-brand-900 focus:outline-none focus:ring-2 focus:ring-brand-300" />
           </div>
 
-          <!-- Destination -->
           <div>
             <label class="mb-1 block text-sm font-medium text-brand-700">Destination</label>
             <input v-model="destination" type="text" placeholder="e.g. Paris, France"
                    class="w-full rounded-lg border border-brand-200 px-3 py-2 text-sm text-brand-900 focus:outline-none focus:ring-2 focus:ring-brand-300" />
           </div>
 
-          <!-- Date range -->
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="mb-1 block text-sm font-medium text-brand-700">Start Date</label>
@@ -97,7 +96,6 @@ async function saveTrip() {
           </div>
           <p v-if="dateError" class="text-sm text-red-600">{{ dateError }}</p>
 
-          <!-- Purpose -->
           <div>
             <label class="mb-2 block text-sm font-medium text-brand-700">Purpose</label>
             <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">

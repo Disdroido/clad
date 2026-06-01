@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
   const db = useDb()
   const itemId = getRouterParam(event, 'id')
 
-  if (!itemId) {
+  if (!itemId || itemId === 'undefined') {
     throw createError({ statusCode: 400, message: 'Item ID is required' })
   }
 

@@ -6,22 +6,22 @@ useHead({ title: 'Settings — Clad' })
 
 const { data: session } = await authClient.useSession(useFetch)
 
+const settingsStore = useSettingsStore()
+
 async function signOut() {
   await authClient.signOut()
   await navigateTo('/login')
 }
 
-// Public profile state
 const publicProfile = ref({ username: '', displayName: '', bio: '', isPublic: false })
-const profileLoading = ref(true)
 const profileSaving = ref(false)
 const profileError = ref('')
 const profileSuccess = ref(false)
 
 async function fetchPublicProfile() {
-  profileLoading.value = true
   try {
-    const data: any = await $fetch('/api/profile/public')
+    await settingsStore.fetchProfile(true)
+    const data = settingsStore.profile
     if (data) {
       publicProfile.value = {
         username: data.username || '',
@@ -30,11 +30,7 @@ async function fetchPublicProfile() {
         isPublic: data.isPublic || false,
       }
     }
-  } catch {
-    // No profile yet — use defaults
-  } finally {
-    profileLoading.value = false
-  }
+  } catch { /* use defaults */ }
 }
 
 async function savePublicProfile() {
@@ -42,7 +38,7 @@ async function savePublicProfile() {
   profileError.value = ''
   profileSuccess.value = false
   try {
-    const result = await $fetch('/api/profile/public', {
+    await $fetch('/api/profile/public', {
       method: 'PATCH',
       body: {
         username: publicProfile.value.username,
@@ -52,6 +48,7 @@ async function savePublicProfile() {
       },
     })
     profileSuccess.value = true
+    settingsStore.invalidateProfile()
     setTimeout(() => { profileSuccess.value = false }, 3000)
   } catch (err: any) {
     profileError.value = err?.data?.message || 'Failed to save profile'
@@ -77,10 +74,9 @@ onMounted(() => {
       <p class="text-sm text-brand-600">{{ session.user.email }}</p>
     </div>
 
-    <div v-if="session && !profileLoading" class="rounded-lg bg-white p-4 shadow mb-6">
+    <div v-if="session" class="rounded-lg bg-white p-4 shadow mb-6">
       <h2 class="font-semibold text-brand-900 mb-3">Public Profile</h2>
 
-      <!-- Toggle -->
       <div class="flex items-center justify-between mb-4">
         <div>
           <p class="text-sm font-medium text-brand-700">Enable Public Profile</p>
@@ -98,7 +94,6 @@ onMounted(() => {
         </button>
       </div>
 
-      <!-- Username -->
       <div class="mb-3">
         <label class="mb-1 block text-xs font-medium text-brand-700">Username</label>
         <input
@@ -111,7 +106,6 @@ onMounted(() => {
         <p class="text-xs text-brand-400 mt-1">3-30 characters. Letters, numbers, underscores, hyphens. Your profile will be at /profile/<strong>your_username</strong>.</p>
       </div>
 
-      <!-- Display Name -->
       <div class="mb-3">
         <label class="mb-1 block text-xs font-medium text-brand-700">Display Name</label>
         <input
@@ -123,7 +117,6 @@ onMounted(() => {
         />
       </div>
 
-      <!-- Bio -->
       <div class="mb-4">
         <label class="mb-1 block text-xs font-medium text-brand-700">Bio (optional)</label>
         <textarea
@@ -137,11 +130,9 @@ onMounted(() => {
         <p class="text-xs text-brand-400 mt-1">{{ (publicProfile.bio || '').length }}/500</p>
       </div>
 
-      <!-- Error / Success -->
       <p v-if="profileError" class="mb-3 text-sm text-red-600">{{ profileError }}</p>
       <p v-if="profileSuccess" class="mb-3 text-sm text-green-600">✅ Profile saved!</p>
 
-      <!-- Save -->
       <button
         @click="savePublicProfile"
         :disabled="profileSaving"

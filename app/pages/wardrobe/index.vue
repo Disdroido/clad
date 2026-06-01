@@ -1,25 +1,10 @@
 <script setup lang="ts">
-definePageMeta({
-  layout: 'default'
-})
+definePageMeta({ layout: 'default' })
+useHead({ title: 'My Wardrobe — Clad' })
 
-useHead({
-  title: 'My Wardrobe — Clad'
-})
+const wardrobeStore = useWardrobeStore()
 
-const items = ref<any[]>([])
-const loading = ref(true)
-
-onMounted(async () => {
-  try {
-    const data = await $fetch<{ items: any[] }>('/api/wardrobe/items')
-    items.value = data.items
-  } catch {
-    items.value = []
-  } finally {
-    loading.value = false
-  }
-})
+onMounted(() => wardrobeStore.fetchItems())
 </script>
 
 <template>
@@ -34,11 +19,11 @@ onMounted(async () => {
       </NuxtLink>
     </div>
 
-    <div v-if="loading" class="flex justify-center py-20">
+    <div v-if="wardrobeStore.loading" class="flex justify-center py-20">
       <span class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-brand-200 border-t-brand-600" />
     </div>
 
-    <div v-else-if="items.length === 0" class="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-brand-200 py-20">
+    <div v-else-if="wardrobeStore.items.length === 0" class="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-brand-200 py-20">
       <p class="mb-4 text-brand-500">Your wardrobe is empty</p>
       <NuxtLink
         to="/wardrobe/upload"
@@ -50,7 +35,7 @@ onMounted(async () => {
 
     <div v-else class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
       <NuxtLink
-        v-for="item in items"
+        v-for="item in wardrobeStore.items"
         :key="item.id"
         :to="`/wardrobe/items/${item.id}`"
         class="overflow-hidden rounded-lg bg-white shadow transition hover:shadow-md hover:-translate-y-0.5"

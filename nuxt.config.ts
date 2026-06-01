@@ -14,7 +14,7 @@ export default defineNuxtConfig({
     host: '0.0.0.0',
   },
 
-  modules: [],
+  modules: ['@pinia/nuxt'],
 
   // CSS is imported in app.vue and processed by @tailwindcss/vite plugin
 

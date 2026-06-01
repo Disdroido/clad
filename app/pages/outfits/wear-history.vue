@@ -2,32 +2,18 @@
 definePageMeta({ layout: 'default' })
 useHead({ title: 'What I Wore — Clad' })
 
-const events = ref<any[]>([])
-const total = ref(0)
-const loading = ref(true)
+const outfitStore = useOutfitStore()
 const limit = 20
 const offset = ref(0)
+const loading = ref(true)
 const loadingMore = ref(false)
 
 async function fetchHistory(append = false) {
   if (append) loadingMore.value = true
   else loading.value = true
-  try {
-    const res = await $fetch('/api/outfits/wear-history', {
-      params: { limit, offset: offset.value }
-    })
-    if (append) {
-      events.value = [...events.value, ...res.events]
-    } else {
-      events.value = res.events
-    }
-    total.value = res.total
-  } catch {
-    if (!append) events.value = []
-  } finally {
-    loading.value = false
-    loadingMore.value = false
-  }
+  await outfitStore.fetchWearHistory(limit, offset.value)
+  loading.value = false
+  loadingMore.value = false
 }
 
 function loadMore() {
@@ -37,7 +23,7 @@ function loadMore() {
 
 const groupedEvents = computed(() => {
   const groups: Record<string, any[]> = {}
-  for (const event of events.value) {
+  for (const event of outfitStore.wearHistory.events) {
     const date = new Date(event.wornDate).toLocaleDateString('en-US', {
       weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
     })
@@ -59,7 +45,7 @@ onMounted(() => fetchHistory(false))
     </div>
 
     <div
-      v-else-if="events.length === 0"
+      v-else-if="outfitStore.wearHistory.events.length === 0"
       class="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-brand-200 py-20"
     >
       <p class="mb-4 text-brand-500">No wear history yet. Start logging outfits you wear!</p>
@@ -101,12 +87,12 @@ onMounted(() => fetchHistory(false))
       </div>
 
       <button
-        v-if="events.length < total"
+        v-if="outfitStore.wearHistory.events.length < outfitStore.wearHistory.total"
         @click="loadMore"
         :disabled="loadingMore"
         class="w-full rounded-lg border border-brand-300 py-3 text-brand-700 hover:bg-brand-50 transition disabled:opacity-50"
       >
-        {{ loadingMore ? 'Loading...' : 'Load More (' + (total - events.length) + ' remaining)' }}
+        {{ loadingMore ? 'Loading...' : 'Load More (' + (outfitStore.wearHistory.total - outfitStore.wearHistory.events.length) + ' remaining)' }}
       </button>
     </div>
   </div>

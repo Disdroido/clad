@@ -2,7 +2,6 @@
 definePageMeta({ layout: 'default' })
 useHead({ title: 'Insights — Clad' })
 
-// Chart.js tree-shakable registration (required for v4)
 import { Doughnut, Bar } from 'vue-chartjs'
 import {
   Chart as ChartJS,
@@ -15,29 +14,7 @@ import {
 } from 'chart.js'
 ChartJS.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip, Legend)
 
-interface AnalyticsResponse {
-  composition: { label: string; value: number }[]
-  colourPalette: { colour: string; count: number }[]
-  mostWorn: Array<{
-    id: string
-    imageUrl: string
-    thumbnailUrl: string
-    clothingType: string
-    colour: string
-    wearCount: number
-  }>
-  seasonBreakdown: { season: string; count: number }[]
-}
-
-// State
-const data = ref<AnalyticsResponse | null>(null)
-const loading = ref(true)
-const error = ref(false)
-
-// Gap analysis state
-const gapData = ref<GapAnalysisResponse | null>(null)
-const gapLoading = ref(false)
-const gapError = ref(false)
+const insightsStore = useInsightsStore()
 
 interface GapAnalysisResponse {
   gaps: Array<{ type: string; detail: string; severity: string }>
@@ -51,27 +28,12 @@ interface GapAnalysisResponse {
   } | null
 }
 
-async function analyzeGaps() {
-  gapLoading.value = true
-  gapError.value = false
-  try {
-    gapData.value = await $fetch<GapAnalysisResponse>('/api/analytics/gaps', { method: 'POST' })
-  } catch {
-    gapError.value = true
-    gapData.value = null
-  } finally {
-    gapLoading.value = false
-  }
-}
-
-// Severity badge color mapping
 const severityBadge: Record<string, string> = {
   high: 'bg-red-100 text-red-700',
   medium: 'bg-amber-100 text-amber-700',
   low: 'bg-blue-100 text-blue-700',
 }
 
-// Gap type labels
 const gapTypeLabels: Record<string, string> = {
   missing_category: 'Missing Category',
   imbalance: 'Category Imbalance',
@@ -79,7 +41,6 @@ const gapTypeLabels: Record<string, string> = {
   colour_concentration: 'Colour Concentration',
 }
 
-// Colour mapping for palette swatches
 const COLOUR_HEX: Record<string, string> = {
   'black': '#1a1a1a', 'white': '#ffffff', 'navy': '#1a2744',
   'grey': '#808080', 'brown': '#8b4513', 'beige': '#f5f5dc',
@@ -94,33 +55,25 @@ const COLOUR_HEX: Record<string, string> = {
   'denim': '#1565c0',
 }
 
-// Chart colours (12-color categorical palette for doughnut)
 const CHART_COLORS = [
   '#6366f1', '#8b5cf6', '#a855f7', '#d946ef',
   '#ec4899', '#f43f5e', '#f97316', '#eab308',
   '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6',
 ]
 
-// Fetch data
-onMounted(async () => {
-  try {
-    data.value = await $fetch<AnalyticsResponse>('/api/analytics')
-  } catch {
-    error.value = true
-    data.value = null
-  } finally {
-    loading.value = false
-  }
-})
+async function analyzeGaps() {
+  await insightsStore.fetchGapAnalysis()
+}
 
-// Computed chart data — generate new objects for vue-chartjs reactivity
+onMounted(() => insightsStore.fetchAnalytics())
+
 const compositionChartData = computed(() => {
-  if (!data.value?.composition) return { labels: [], datasets: [] }
+  if (!insightsStore.analytics?.composition) return { labels: [], datasets: [] }
   return {
-    labels: data.value.composition.map(c => c.label),
+    labels: insightsStore.analytics.composition.map((c: any) => c.label),
     datasets: [{
-      data: data.value.composition.map(c => c.value),
-      backgroundColor: CHART_COLORS.slice(0, data.value.composition.length),
+      data: insightsStore.analytics.composition.map((c: any) => c.value),
+      backgroundColor: CHART_COLORS.slice(0, insightsStore.analytics.composition.length),
       borderWidth: 2,
       borderColor: '#ffffff',
     }],
@@ -136,12 +89,12 @@ const compositionChartOptions = {
 }
 
 const mostWornChartData = computed(() => {
-  if (!data.value?.mostWorn?.length) return { labels: [], datasets: [] }
+  if (!insightsStore.analytics?.mostWorn?.length) return { labels: [], datasets: [] }
   return {
-    labels: data.value.mostWorn.map(i => `${i.clothingType}`),
+    labels: insightsStore.analytics.mostWorn.map((i: any) => `${i.clothingType}`),
     datasets: [{
       label: 'Times Worn',
-      data: data.value.mostWorn.map(i => i.wearCount),
+      data: insightsStore.analytics.mostWorn.map((i: any) => i.wearCount),
       backgroundColor: '#6366f180',
       borderColor: '#6366f1',
       borderWidth: 1,
@@ -154,7 +107,7 @@ const mostWornChartData = computed(() => {
 const mostWornChartOptions = {
   responsive: true,
   maintainAspectRatio: false,
-  indexAxis: 'y' as const, // horizontal bars for readable labels
+  indexAxis: 'y' as const,
   plugins: {
     legend: { display: false },
     tooltip: {
@@ -169,18 +122,17 @@ const mostWornChartOptions = {
   },
 }
 
-// Colour palette with percentages
 const paletteWithPercent = computed(() => {
-  if (!data.value?.colourPalette) return []
-  const total = data.value.colourPalette.reduce((s, r) => s + r.count, 0)
-  return data.value.colourPalette.map(row => ({
+  if (!insightsStore.analytics?.colourPalette) return []
+  const total = insightsStore.analytics.colourPalette.reduce((s: number, r: any) => s + r.count, 0)
+  return insightsStore.analytics.colourPalette.map((row: any) => ({
     ...row,
     percentage: Math.round((row.count / total) * 100),
     hex: COLOUR_HEX[row.colour.toLowerCase()] || '#cccccc',
   }))
 })
 
-const hasData = computed(() => data.value?.composition?.length)
+const hasData = computed(() => insightsStore.analytics?.composition?.length)
 </script>
 
 <template>
@@ -188,14 +140,11 @@ const hasData = computed(() => data.value?.composition?.length)
     <h1 class="mb-6 text-2xl font-bold text-brand-950">Insights</h1>
 
     <!-- Loading state -->
-    <div v-if="loading" class="flex justify-center py-20">
+    <div v-if="insightsStore.loading" class="flex justify-center py-20">
       <span class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-brand-200 border-t-brand-600" />
     </div>
 
-    <!-- Error state -->
-    <div v-else-if="error" class="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
-      <p class="text-red-700">Couldn't load your insights. Please try again.</p>
-    </div>
+    <!-- Error state: handled by null analytics -->
 
     <!-- Empty state -->
     <div v-else-if="!hasData" class="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-brand-200 py-20">
@@ -221,12 +170,11 @@ const hasData = computed(() => data.value?.composition?.length)
       <section class="rounded-xl bg-white p-6 shadow-sm border border-brand-100">
         <h2 class="mb-1 text-lg font-semibold text-brand-900">Most-Worn Items</h2>
         <p class="mb-4 text-sm text-brand-500">Your most frequently worn individual pieces</p>
-        <div v-if="data.mostWorn?.length" class="relative h-64">
+        <div v-if="insightsStore.analytics.mostWorn?.length" class="relative h-64">
           <Bar :data="mostWornChartData" :options="mostWornChartOptions" />
         </div>
-        <!-- Ranked list below chart -->
-        <div v-if="data.mostWorn?.length" class="mt-4 space-y-2">
-          <NuxtLink v-for="(item, idx) in data.mostWorn.slice(0, 10)" :key="item.id"
+        <div v-if="insightsStore.analytics.mostWorn?.length" class="mt-4 space-y-2">
+          <NuxtLink v-for="(item, idx) in insightsStore.analytics.mostWorn.filter((i: any) => i.id).slice(0, 10)" :key="item.id"
             :to="`/wardrobe/items/${item.id}`"
             class="flex items-center gap-3 rounded-lg bg-brand-50 p-2 hover:bg-brand-100 transition">
             <span class="w-6 text-center text-sm font-bold text-brand-400">#{{ idx + 1 }}</span>
@@ -264,8 +212,7 @@ const hasData = computed(() => data.value?.composition?.length)
           Want more out of your wardrobe? Let AI find gaps and suggest what to add.
         </p>
 
-        <!-- Not yet analyzed — show CTA -->
-        <div v-if="!gapData && !gapLoading && !gapError"
+        <div v-if="!insightsStore.gapData && !insightsStore.gapLoading"
              class="flex flex-col items-center rounded-lg border-2 border-dashed border-brand-200 py-10">
           <p class="mb-4 text-brand-500">Discover what's missing from your wardrobe</p>
           <button @click="analyzeGaps"
@@ -274,31 +221,19 @@ const hasData = computed(() => data.value?.composition?.length)
           </button>
         </div>
 
-        <!-- Loading state -->
-        <div v-if="gapLoading" class="flex flex-col items-center py-10">
+        <div v-if="insightsStore.gapLoading" class="flex flex-col items-center py-10">
           <span class="mb-3 inline-block h-8 w-8 animate-spin rounded-full border-4 border-brand-200 border-t-brand-600" />
           <p class="text-sm text-brand-500">AI is analyzing your wardrobe...</p>
         </div>
 
-        <!-- Error state -->
-        <div v-if="gapError" class="rounded-lg border border-red-200 bg-red-50 p-4 text-center">
-          <p class="text-sm text-red-700">Analysis failed. Please try again.</p>
-          <button @click="analyzeGaps" class="mt-2 text-sm font-medium text-brand-600 hover:text-brand-700">
-            Try Again
-          </button>
-        </div>
-
-        <!-- Results -->
-        <div v-if="gapData" class="space-y-4">
-          <!-- No gaps found -->
-          <div v-if="gapData.gaps.length === 0" class="rounded-lg bg-green-50 p-4 text-center">
+        <div v-if="insightsStore.gapData" class="space-y-4">
+          <div v-if="insightsStore.gapData.gaps.length === 0" class="rounded-lg bg-green-50 p-4 text-center">
             <p class="text-green-700 font-medium">Your wardrobe looks well-balanced! 🎉</p>
             <p class="mt-1 text-sm text-green-600">No major gaps detected.</p>
           </div>
 
-          <!-- Detected gaps -->
           <div v-else>
-            <div v-for="(gap, idx) in gapData.gaps" :key="idx"
+            <div v-for="(gap, idx) in insightsStore.gapData.gaps" :key="idx"
                  class="mb-3 rounded-lg border border-brand-100 bg-brand-50 p-4">
               <div class="mb-2 flex items-center justify-between">
                 <span class="rounded-full px-2 py-0.5 text-xs font-medium"
@@ -317,9 +252,8 @@ const hasData = computed(() => data.value?.composition?.length)
                    gap.detail }}
               </p>
 
-              <!-- AI enrichment for this gap (if available) -->
-              <div v-if="gapData.aiRecommendations">
-                <div v-for="rec in gapData.aiRecommendations.recommendations.filter(r => r.gap.includes(gap.detail) || r.gap.includes(gap.type))"
+              <div v-if="insightsStore.gapData.aiRecommendations">
+                <div v-for="rec in insightsStore.gapData.aiRecommendations.recommendations.filter((r: any) => r.gap.includes(gap.detail) || r.gap.includes(gap.type))"
                      :key="rec.gap" class="mt-3 border-t border-brand-200 pt-3">
                   <p class="text-sm text-brand-700">{{ rec.suggestion }}</p>
                   <div v-if="rec.specificItems?.length" class="mt-2">
@@ -342,20 +276,18 @@ const hasData = computed(() => data.value?.composition?.length)
               </div>
             </div>
 
-            <!-- Surprise insight & long-term goal (from AI) -->
-            <div v-if="gapData.aiRecommendations" class="mt-4 space-y-3 rounded-lg bg-brand-50 p-4 border border-brand-100">
-              <div v-if="gapData.aiRecommendations.surpriseInsight">
+            <div v-if="insightsStore.gapData.aiRecommendations" class="mt-4 space-y-3 rounded-lg bg-brand-50 p-4 border border-brand-100">
+              <div v-if="insightsStore.gapData.aiRecommendations.surpriseInsight">
                 <p class="text-xs font-medium text-brand-500 uppercase tracking-wide">Surprise Insight</p>
-                <p class="mt-1 text-sm text-brand-700">{{ gapData.aiRecommendations.surpriseInsight }}</p>
+                <p class="mt-1 text-sm text-brand-700">{{ insightsStore.gapData.aiRecommendations.surpriseInsight }}</p>
               </div>
-              <div v-if="gapData.aiRecommendations.longTermGoal">
+              <div v-if="insightsStore.gapData.aiRecommendations.longTermGoal">
                 <p class="text-xs font-medium text-brand-500 uppercase tracking-wide">Long-Term Goal</p>
-                <p class="mt-1 text-sm text-brand-700">{{ gapData.aiRecommendations.longTermGoal }}</p>
+                <p class="mt-1 text-sm text-brand-700">{{ insightsStore.gapData.aiRecommendations.longTermGoal }}</p>
               </div>
             </div>
 
-            <!-- Rules-only fallback notice -->
-            <div v-if="!gapData.aiRecommendations && gapData.gaps.length > 0"
+            <div v-if="!insightsStore.gapData.aiRecommendations && insightsStore.gapData.gaps.length > 0"
                  class="rounded-lg bg-amber-50 p-3 text-center text-xs text-amber-600">
               AI suggestions unavailable — showing rule-based analysis.<br>
               <button @click="analyzeGaps" class="font-medium underline">Try AI analysis again</button>
