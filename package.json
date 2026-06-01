@@ -16,15 +16,18 @@
     "db:reset": "tsx scripts/reset-db.ts"
   },
   "dependencies": {
+    "@esbuild/darwin-arm64": "^0.28.0",
     "@neondatabase/serverless": "^0.10.0",
     "@tailwindcss/vite": "^4.0.0",
     "@vueuse/core": "^14.3.0",
     "better-auth": "^1.6.12",
+    "chart.js": "^4.5.1",
     "drizzle-orm": "^0.45.2",
     "nuxt": "^4.0.0",
     "openai": "^4.0.0",
     "tailwindcss": "^4.0.0",
     "vue": "latest",
+    "vue-chartjs": "^5.3.3",
     "wrangler": "^4.95.0",
     "zod": "^3.25.76"
   },
