@@ -45,10 +45,15 @@ export default defineEventHandler(async (event) => {
   const contentType = filePart.type || mimeFromExtension(extension)
   const key = buildClothingItemKey(userId, extension)
 
-  const { url } = await uploadToR2(key, filePart.data, {
-    contentType,
-    cacheControl: 'public, max-age=31536000, immutable',
-  })
+  try {
+    const { url } = await uploadToR2(key, filePart.data, {
+      contentType,
+      cacheControl: 'public, max-age=31536000, immutable',
+    }, event)
 
-  return { imageUrl: url, key }
+    return { imageUrl: url, key }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Image upload failed'
+    throw createError({ statusCode: 502, message })
+  }
 })

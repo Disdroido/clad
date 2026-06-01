@@ -1,13 +1,14 @@
 /**
- * Cloudflare R2 helpers using the REST API with a Bearer token (cfat_...).
+ * Cloudflare R2 helpers.
  *
- * We deliberately avoid the AWS SDK: the bundle is large and Cloudflare's
- * REST API works directly with the API token the user already has.
- *
- * Reference: https://developers.cloudflare.com/api/resources/r2/subresources/buckets/subresources/objects/methods/upload
- * The REST upload endpoint has a 300 MB cap per object, which is fine for
- * clothing photos. For larger files, switch to the S3 multipart API.
+ * On Workers we prefer the native R2 binding (no API token required).
+ * Locally, or when no binding is configured, we fall back to the REST API
+ * with a Bearer token (cfat_... or Account API token with R2 Edit).
  */
+
+import type { H3Event } from 'h3'
+import { getR2Binding } from './r2-binding'
+import { getServerEnv, requireServerEnv } from './runtime-env'
 
 const CF_API_BASE = 'https://api.cloudflare.com/client/v4'
 
@@ -24,17 +25,13 @@ export interface UploadToR2Result {
 }
 
 function encodeKey(key: string): string {
-  // Slashes in the key MUST be sent literally (not percent-encoded) per
-  // Cloudflare's spec; everything else gets URL-encoded normally.
   return key
     .split('/')
     .map((segment) => encodeURIComponent(segment))
     .join('/')
 }
 
-import { getServerEnv, requireServerEnv } from './runtime-env'
-
-function getR2Config() {
+function getR2RestConfig() {
   const { r2PublicUrl } = getServerEnv()
   const accountId = requireServerEnv('r2AccountId')
   const apiToken = requireServerEnv('r2ApiToken')
@@ -44,19 +41,34 @@ function getR2Config() {
 }
 
 export function r2PublicUrl(key: string): string {
-  const { publicUrl } = getR2Config()
+  const { r2PublicUrl: publicUrl } = getServerEnv()
   if (!publicUrl) {
     throw new Error('R2_PUBLIC_URL is not set. Add your r2.dev or custom-domain URL.')
   }
   return `${publicUrl.replace(/\/$/, '')}/${encodeKey(key)}`
 }
 
-export async function uploadToR2(
+async function uploadViaBinding(
+  bucket: ReturnType<typeof getR2Binding>,
   key: string,
   body: R2UploadBody,
-  options: UploadToR2Options = {},
+  options: UploadToR2Options,
 ): Promise<UploadToR2Result> {
-  const { accountId, apiToken, bucket } = getR2Config()
+  await bucket!.put(key, body as BodyInit, {
+    httpMetadata: {
+      contentType: options.contentType ?? 'application/octet-stream',
+      cacheControl: options.cacheControl,
+    },
+  })
+  return { key, url: r2PublicUrl(key) }
+}
+
+async function uploadViaRestApi(
+  key: string,
+  body: R2UploadBody,
+  options: UploadToR2Options,
+): Promise<UploadToR2Result> {
+  const { accountId, apiToken, bucket } = getR2RestConfig()
 
   const url = `${CF_API_BASE}/accounts/${accountId}/r2/buckets/${bucket}/objects/${encodeKey(key)}`
 
@@ -76,14 +88,40 @@ export async function uploadToR2(
 
   if (!res.ok) {
     const detail = await res.text().catch(() => '')
+    if (res.status === 401) {
+      throw new Error(
+        'R2 authentication failed. On Cloudflare Workers, add an R2 bucket binding in wrangler.jsonc. '
+        + 'For local dev, use an Account API token (not an R2 S3 key) with Account → R2 → Edit permission.',
+      )
+    }
     throw new Error(`R2 upload failed (${res.status} ${res.statusText}): ${detail}`)
   }
 
   return { key, url: r2PublicUrl(key) }
 }
 
-export async function deleteFromR2(key: string): Promise<void> {
-  const { accountId, apiToken, bucket } = getR2Config()
+export async function uploadToR2(
+  key: string,
+  body: R2UploadBody,
+  options: UploadToR2Options = {},
+  event?: H3Event,
+): Promise<UploadToR2Result> {
+  const binding = getR2Binding(event)
+  if (binding) {
+    return uploadViaBinding(binding, key, body, options)
+  }
+  return uploadViaRestApi(key, body, options)
+}
+
+async function deleteViaBinding(
+  bucket: ReturnType<typeof getR2Binding>,
+  key: string,
+): Promise<void> {
+  await bucket!.delete(key)
+}
+
+async function deleteViaRestApi(key: string): Promise<void> {
+  const { accountId, apiToken, bucket } = getR2RestConfig()
 
   const url = `${CF_API_BASE}/accounts/${accountId}/r2/buckets/${bucket}/objects/${encodeKey(key)}`
 
@@ -92,11 +130,19 @@ export async function deleteFromR2(key: string): Promise<void> {
     headers: { Authorization: `Bearer ${apiToken}` },
   })
 
-  // 404 is fine — object was already gone.
   if (!res.ok && res.status !== 404) {
     const detail = await res.text().catch(() => '')
     throw new Error(`R2 delete failed (${res.status} ${res.statusText}): ${detail}`)
   }
+}
+
+export async function deleteFromR2(key: string, event?: H3Event): Promise<void> {
+  const binding = getR2Binding(event)
+  if (binding) {
+    await deleteViaBinding(binding, key)
+    return
+  }
+  await deleteViaRestApi(key)
 }
 
 /**

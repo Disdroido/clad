@@ -4,12 +4,20 @@
   //
   // Set secrets in Cloudflare dashboard (Settings → Variables and Secrets),
   // NOT in this file. Required:
-  //   Secrets: AUTH_SECRET, NEON_DATABASE_URL, OPENROUTER_API_KEY, R2_API_TOKEN
-  //   Vars:    PUBLIC_APP_URL (https://clad.ethan-worth2.workers.dev), R2_*
+  //   Secrets: AUTH_SECRET, NEON_DATABASE_URL, OPENROUTER_API_KEY
+  //   Vars:    PUBLIC_APP_URL (https://clad.ethan-worth2.workers.dev), R2_PUBLIC_URL
+  // R2 uploads use the R2_IMAGES binding below — R2_API_TOKEN is not required in production.
   //
   // Deploy: npm run deploy
   "$schema": "https://unpkg.com/wrangler/config-schema.json",
   "name": "clad",
   "compatibility_date": "2025-09-01",
-  "compatibility_flags": ["nodejs_compat", "no_nodejs_compat_v2"]
+  "compatibility_flags": ["nodejs_compat", "no_nodejs_compat_v2"],
+  // Native R2 binding — Workers auth to R2 is automatic; no R2_API_TOKEN needed in prod.
+  "r2_buckets": [
+    {
+      "binding": "R2_IMAGES",
+      "bucket_name": "clad-images"
+    }
+  ]
 }
