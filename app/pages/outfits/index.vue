@@ -60,7 +60,12 @@ onMounted(fetchOutfits)
           <span class="rounded-full bg-brand-100 px-2 py-0.5 text-xs font-medium text-brand-700 capitalize">
             {{ outfit.occasion }}
           </span>
-          <span class="text-xs text-brand-400">{{ new Date(outfit.createdAt).toLocaleDateString() }}</span>
+          <div class="flex items-center gap-2">
+            <span v-if="outfit.wearCount > 0" class="text-xs text-brand-400">
+              👗 {{ outfit.wearCount }}
+            </span>
+            <span class="text-xs text-brand-400">{{ new Date(outfit.createdAt).toLocaleDateString() }}</span>
+          </div>
         </div>
 
         <div v-if="outfit.items?.length" class="mb-3 flex gap-2 overflow-x-auto pb-1">
