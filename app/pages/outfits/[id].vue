@@ -25,7 +25,7 @@ onMounted(fetchOutfit)
 </script>
 
 <template>
-  <div class="mx-auto max-w-2xl">
+  <div class="mx-auto max-w-4xl">
     <div class="mb-4 flex items-center gap-2">
       <NuxtLink to="/outfits" class="text-sm text-brand-400 hover:text-brand-600">&larr; All Outfits</NuxtLink>
     </div>
@@ -34,7 +34,7 @@ onMounted(fetchOutfit)
       <span class="inline-block mb-4 h-8 w-8 animate-spin rounded-full border-4 border-brand-200 border-t-brand-600" />
     </div>
 
-    <div v-else-if="outfit" class="rounded-xl bg-white p-6 shadow-lg">
+    <div v-else-if="outfit" class="rounded-xl bg-white p-6 shadow-lg md:p-8">
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-xl font-semibold text-brand-900">Your Outfit</h2>
         <span class="rounded-full bg-brand-100 px-3 py-1 text-sm text-brand-700 capitalize">
@@ -44,7 +44,7 @@ onMounted(fetchOutfit)
 
       <p class="text-brand-600 italic mb-6">{{ outfit.explanation }}</p>
 
-      <div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
+      <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
         <div
           v-for="item in outfit.items"
           :key="item.id"

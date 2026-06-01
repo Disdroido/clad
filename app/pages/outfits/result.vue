@@ -66,7 +66,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="mx-auto max-w-2xl">
+  <div class="mx-auto max-w-4xl">
     <div class="mb-4 flex items-center gap-2">
       <NuxtLink to="/outfits/generate" class="text-sm text-brand-400 hover:text-brand-600">&larr; Pick Different Occasion</NuxtLink>
     </div>
@@ -76,7 +76,7 @@ onMounted(() => {
       <p class="text-brand-500">AI is picking your outfit...</p>
     </div>
 
-    <div v-else-if="outfitResult" class="rounded-xl bg-white p-6 shadow-lg">
+    <div v-else-if="outfitResult" class="rounded-xl bg-white p-6 shadow-lg md:p-8">
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-xl font-semibold text-brand-900">Your Outfit</h2>
         <span class="rounded-full bg-brand-100 px-3 py-1 text-sm text-brand-700 capitalize">
@@ -86,7 +86,7 @@ onMounted(() => {
 
       <p class="text-brand-600 italic mb-6">{{ outfitResult.explanation }}</p>
 
-      <div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
+      <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
         <div
           v-for="item in outfitResult.items"
           :key="item.id"
