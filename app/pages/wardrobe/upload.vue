@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { useFileDialog, useObjectUrl } from '@vueuse/core'
+import { useFileDialog } from '@vueuse/core'
 
 const router = useRouter()
 
@@ -39,6 +39,33 @@ function fetchErrorMessage(err: unknown): string {
     return e.data?.message || e.statusMessage || e.message || 'Upload failed'
   }
   return 'Upload failed'
+}
+
+async function compressImage(file: File, maxDimension = 1024, quality = 0.8): Promise<Blob> {
+  const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => resolve(img)
+    img.onerror = reject
+    img.src = URL.createObjectURL(file)
+  })
+
+  let { width, height } = img
+  if (width > maxDimension || height > maxDimension) {
+    const ratio = Math.min(maxDimension / width, maxDimension / height)
+    width = Math.round(width * ratio)
+    height = Math.round(height * ratio)
+  }
+
+  const canvas = document.createElement('canvas')
+  canvas.width = width
+  canvas.height = height
+  const ctx = canvas.getContext('2d')!
+  ctx.drawImage(img, 0, 0, width, height)
+  URL.revokeObjectURL(img.src)
+
+  return new Promise(resolve => {
+    canvas.toBlob(blob => resolve(blob!), 'image/jpeg', quality)
+  })
 }
 
 function statusLabel(item: UploadItem): string {
@@ -80,10 +107,13 @@ function handleCapture() {
 async function onFilesSelected() {
   if (!files.value) return
 
-  uploadItems.value = Array.from(files.value).map(file => ({
-    file,
-    preview: useObjectUrl(file).value || '',
-    status: 'pending' as const,
+  uploadItems.value = await Promise.all(Array.from(files.value).map(async file => {
+    const compressed = await compressImage(file)
+    return {
+      file: new File([compressed], file.name.replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' }),
+      preview: URL.createObjectURL(compressed),
+      status: 'pending' as const,
+    }
   }))
 }
 
@@ -106,8 +136,9 @@ async function analyzeItems() {
     item.saved = false
 
     try {
+      const compressed = await compressImage(item.file)
       const formData = new FormData()
-      formData.append('file', item.file)
+      formData.append('file', compressed, item.file.name.replace(/\.[^.]+$/, '') + '.jpg')
 
       const uploadRes = await $fetch<{ imageUrl: string }>('/api/wardrobe/upload-image', {
         method: 'POST',
@@ -174,8 +205,16 @@ async function handlePrimaryAction() {
 }
 
 function removeItem(index: number) {
+  const item = uploadItems.value[index]
+  if (item?.preview) URL.revokeObjectURL(item.preview)
   uploadItems.value.splice(index, 1)
 }
+
+onUnmounted(() => {
+  for (const item of uploadItems.value) {
+    if (item.preview) URL.revokeObjectURL(item.preview)
+  }
+})
 
 watch(files, onFilesSelected)
 </script>
