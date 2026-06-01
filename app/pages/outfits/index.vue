@@ -55,12 +55,23 @@ onMounted(fetchOutfits)
         :key="outfit.id"
         class="rounded-xl bg-white p-4 shadow-sm border border-brand-100"
       >
-        <div class="mb-2 flex items-center justify-between">
+        <div class="mb-3 flex items-center justify-between">
           <span class="rounded-full bg-brand-100 px-2 py-0.5 text-xs font-medium text-brand-700 capitalize">
             {{ outfit.occasion }}
           </span>
           <span class="text-xs text-brand-400">{{ new Date(outfit.createdAt).toLocaleDateString() }}</span>
         </div>
+
+        <div v-if="outfit.items?.length" class="mb-3 flex gap-2 overflow-x-auto pb-1">
+          <img
+            v-for="item in outfit.items"
+            :key="item.id"
+            :src="item.imageUrl"
+            :alt="item.clothingType"
+            class="h-20 w-20 flex-shrink-0 rounded-lg border border-brand-100 object-cover"
+          />
+        </div>
+
         <p class="text-sm text-brand-600 italic">{{ outfit.explanation }}</p>
       </div>
     </div>
