@@ -2,20 +2,20 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 05
-status: Executing Phase 05
-last_updated: "2026-06-01T06:06:39.887Z"
+current_phase: 06
+status: Executing Phase 06
+last_updated: "2026-06-01T06:30:26.582Z"
 progress:
   total_phases: 8
   completed_phases: 4
-  total_plans: 12
-  completed_plans: 12
+  total_plans: 15
+  completed_plans: 13
 ---
 
 # Current State
 
 **Date:** 2026-06-01
-**Current Phase:** 05
+**Current Phase:** 06
 **Next Phase:** 03 — Weather Integration
 
 ## Progress
@@ -70,6 +70,9 @@ progress:
 - [Phase 04-03]: Rules-only fallback includes retry button to re-trigger AI without page reload
 - [Phase 05]: v-calendar v3.1.2 (next tag) used with v2-compatible API (setupCalendar, Calendar, DatePicker)
 - [Phase 05]: Packing list checked state persisted to localStorage (server persistence deferred)
+- [Phase 06-social-sharing]: Shared outfit IDs use 8-char hex shortId (first 8 chars of UUID sans dashes) for cleaner share URLs
+- [Phase 06-social-sharing]: Public endpoints use getOptionalUserId for optional viewer context without blocking anonymous access
+- [Phase 06-social-sharing]: Engagement endpoints toggle with single POST call (insert if not exists, delete if exists)
 
 ## Blockers
 

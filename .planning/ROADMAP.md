@@ -85,10 +85,10 @@
 **Goal:** Let users plan outfits in advance on a calendar, schedule looks for events and trips.
 
 **Plans:**
-2/3 plans executed
+3/3 plans complete
 - [x] 05-01-PLAN.md — Outfit scheduling schema and API (Wave 1, 3 tasks)
 - [x] 05-02-PLAN.md — Calendar view UI with v-calendar + nav + schedule from outfit detail (Wave 2, 3 tasks)
-- [ ] 05-03-PLAN.md — Trip packing list generator with AI (Wave 3, 2 tasks)
+- [x] 05-03-PLAN.md — Trip packing list generator with AI (Wave 3, 2 tasks)
 
 **Requirements:**
 - [CALENDAR-01] User can schedule outfits for specific dates
@@ -98,13 +98,14 @@
 ---
 
 ## Phase 06: Social & Sharing
-**Status:** 🔮 Proposed
-**Goal:** Let users share outfits, build a community, and get inspiration from others.
+**Status:** 🚧 Planning Complete
+**Goal:** Let users share outfits via public links (with SEO preview cards), build public profiles (opt-in), discover other users' outfits through a chronological global feed, and engage with likes, follows, and saves. All social features are opt-in.
 
 **Plans:**
-- [ ] 06-01-PLAN.md — Outfit sharing (public links, social media)
-- [ ] 06-02-PLAN.md — Public profile (opt-in) and OOTD feed
-- [ ] 06-03-PLAN.md — Like, comment, follow features
+1/3 plans executed
+- [x] 06-01-PLAN.md — Schema + API: shared_outfits, public_profiles, likes, follows, saves tables; all 11 API endpoints (share, profile, discover, engagement, inspiration); auth bypass for public pages (Wave 1)
+- [x] 06-02-PLAN.md — Public pages: share/[id] (SEO og:image, og:title), discover feed (infinite scroll), profile/[username]; share button, settings public profile section, nav integration (Wave 2)
+- [x] 06-03-PLAN.md — Engagement components: LikeButton, FollowButton, SaveButton (optimistic UI); FeedCard, ProfileHeader; inspiration board; wiring engagement into pages (Wave 3)
 
 **Requirements:**
 - [SOCIAL-01] User can share outfits via public link
