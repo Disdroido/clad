@@ -28,20 +28,20 @@
 ---
 
 ## Phase 02: Outfit Lifecycle & Wear History
-**Status:** 🚧 In Progress (1/3 plans complete)
+**Status:** ✅ Complete (3/3 plans complete)
 **Goal:** Track what users actually wear, add ratings, and make outfit generation smarter by learning from wear patterns.
 
 **Plans:**
 - [x] 02-01-PLAN.md — Wear tracking schema and API (3 tasks, Wave 1)
 - [x] 02-02-PLAN.md — Wear tracking UI and outfit rating (3 tasks, Wave 1, parallel)
-- [ ] 02-03-PLAN.md — Smart generation with wear recency (2 tasks, Wave 2)
+- [x] 02-03-PLAN.md — Smart generation with wear recency (2 tasks, Wave 2)
 
 **Requirements:**
 - [x] [WEAR-01] User can log when they wear a saved outfit
 - [x] [WEAR-02] User can rate outfits after wearing them
 - [x] [WEAR-03] User can view wear history (what I wore, when)
-- [WEAR-04] Outfit generation avoids recently worn items
-- [WEAR-05] User can see wear count and last-worn date on items/outfits
+- [x] [WEAR-04] Outfit generation avoids recently worn items
+- [x] [WEAR-05] User can see wear count and last-worn date on items/outfits
 
 ---
 

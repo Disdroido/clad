@@ -4,12 +4,12 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 02
 status: unknown
-last_updated: "2026-06-01T02:48:30.000Z"
+last_updated: "2026-06-01T02:50:53.533Z"
 progress:
   total_phases: 8
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 3
-  completed_plans: 1
+  completed_plans: 3
 ---
 
 # Current State
@@ -21,10 +21,10 @@ progress:
 ## Progress
 
 - Phase 01: ✅ Complete (all requirements met)
-- Phase 02: 🚧 In Progress (1/3 plans complete)
+- Phase 02: 🚧 In Progress (3/3 plans complete, all requirements met)
   - [x] 02-01-PLAN.md — Wear tracking schema and API ✅
-  - [ ] 02-02-PLAN.md — Wear tracking UI and outfit rating
-  - [ ] 02-03-PLAN.md — Smart generation with wear recency
+  - [x] 02-02-PLAN.md — Wear tracking UI and outfit rating ✅
+  - [x] 02-03-PLAN.md — Smart generation with wear recency ✅
 - Phases 03-08: 🔮 Defined in roadmap
 
 ## Decisions
@@ -38,6 +38,8 @@ progress:
 - **Routing:** Nuxt 4 file-based routing
 - **Image handling:** Client-side compression before upload
 - [Phase 02]: Wear events use separate table (outfit_wear_events) instead of jsonb array for query efficiency
+- [Phase 02-outfit-lifecycle]: Wear recency uses -5 penalty (not exclusion) for graceful fallback when user has limited wardrobe
+- [Phase 02-outfit-lifecycle]: Wear data query wrapped in try/catch so missing wear_events table doesn't break generation
 
 ## Blockers
 
