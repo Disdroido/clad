@@ -48,14 +48,6 @@ export default defineNuxtConfig({
     cloudflare: {
       deployConfig: true,
       nodeCompat: true,
-      wrangler: {
-        r2_buckets: [
-          {
-            binding: 'R2_IMAGES',
-            bucket_name: 'clad-images',
-          },
-        ],
-      },
     },
   },
 
