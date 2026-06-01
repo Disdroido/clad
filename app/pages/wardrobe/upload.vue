@@ -203,9 +203,9 @@ watch(files, onFilesSelected)
             class="h-24 w-24 rounded-lg object-cover"
             alt="Preview"
           />
-          <div class="flex-1">
-            <p class="font-medium">{{ item.file.name }}</p>
-            <p class="text-sm" :class="{
+          <div class="flex-1 min-w-0">
+            <p class="truncate font-medium">{{ item.file.name }}</p>
+            <p class="break-words text-sm" :class="{
               'text-brand-500': item.status === 'pending',
               'text-yellow-600': item.status === 'uploading' || item.status === 'analyzing',
               'text-green-600': item.status === 'done' && item.saved,
