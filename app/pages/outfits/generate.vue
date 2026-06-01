@@ -7,6 +7,8 @@ useHead({
   title: 'Generate Outfit — Clad'
 })
 
+const router = useRouter()
+
 const occasions = [
   { id: 'casual', label: 'Casual', icon: '👕', desc: 'Everyday errands, hanging out' },
   { id: 'work', label: 'Work', icon: '💼', desc: 'Office or professional setting' },
@@ -17,28 +19,24 @@ const occasions = [
 
 const selectedOccasion = ref<string | null>(null)
 const generating = ref(false)
-const outfitResult = ref<any>(null)
 
 async function generateOutfit() {
   if (!selectedOccasion.value) return
 
   generating.value = true
-  outfitResult.value = null
 
   try {
-    outfitResult.value = await $fetch('/api/outfits/generate', {
+    await $fetch('/api/outfits/generate', {
       method: 'POST',
       body: { occasion: selectedOccasion.value },
     })
-  } catch (err) {
-    console.error('Generation failed:', err)
+    router.push(`/outfits/result?occasion=${selectedOccasion.value}`)
+  } catch (err: any) {
+    const msg = err?.data?.message || err?.message || 'Failed to generate outfit'
+    alert(msg)
   } finally {
     generating.value = false
   }
-}
-
-function regenerate() {
-  generateOutfit()
 }
 </script>
 
@@ -81,44 +79,5 @@ function regenerate() {
       </span>
     </button>
 
-    <!-- Result -->
-    <div v-if="outfitResult" class="mt-8 rounded-xl bg-white p-6 shadow-lg">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-lg font-semibold text-brand-900">Your Outfit</h2>
-        <span class="rounded-full bg-brand-100 px-3 py-1 text-sm text-brand-700 capitalize">
-          {{ outfitResult.occasion }}
-        </span>
-      </div>
-
-      <p class="text-brand-600 italic mb-4">{{ outfitResult.explanation }}</p>
-
-      <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        <div
-          v-for="item in outfitResult.items"
-          :key="item.id"
-          class="overflow-hidden rounded-lg border border-brand-100"
-        >
-          <img :src="item.imageUrl" :alt="item.clothingType" class="aspect-square w-full object-cover" />
-          <div class="p-2 text-center">
-            <p class="text-sm font-medium text-brand-900 capitalize">{{ item.clothingType }}</p>
-            <p class="text-xs text-brand-500">{{ item.colour }}</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="mt-4 flex gap-3">
-        <button
-          @click="regenerate"
-          class="flex-1 rounded-lg border border-brand-300 py-3 text-brand-700 hover:bg-brand-50 transition"
-        >
-          🎲 Regenerate
-        </button>
-        <button
-          class="flex-1 rounded-lg bg-brand-600 py-3 text-white hover:bg-brand-700 transition"
-        >
-          💾 Save Outfit
-        </button>
-      </div>
-    </div>
   </div>
 </template>
