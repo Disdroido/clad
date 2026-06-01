@@ -28,12 +28,12 @@
 ---
 
 ## Phase 02: Outfit Lifecycle & Wear History
-**Status:** 📋 Planned (PLAN.md files created)
+**Status:** 🚧 In Progress (1/3 plans complete)
 **Goal:** Track what users actually wear, add ratings, and make outfit generation smarter by learning from wear patterns.
 
 **Plans:**
 - [ ] 02-01-PLAN.md — Wear tracking schema and API (3 tasks, Wave 1)
-- [ ] 02-02-PLAN.md — Wear tracking UI and outfit rating (3 tasks, Wave 1, parallel)
+- [x] 02-02-PLAN.md — Wear tracking UI and outfit rating (3 tasks, Wave 1, parallel)
 - [ ] 02-03-PLAN.md — Smart generation with wear recency (2 tasks, Wave 2)
 
 **Requirements:**
