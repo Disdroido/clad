@@ -4,6 +4,7 @@ const route = useRoute()
 const navItems = [
   { label: 'Wardrobe', to: '/wardrobe', icon: '👔' },
   { label: 'Outfits', to: '/outfits', icon: '✨' },
+  { label: 'Calendar', to: '/calendar', icon: '📅' },
   { label: 'What I Wore', to: '/outfits/wear-history', icon: '📅' },
   { label: 'Insights', to: '/insights', icon: '📊' },
   { label: 'Settings', to: '/settings', icon: '⚙️' },

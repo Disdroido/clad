@@ -10,6 +10,14 @@ const wearSuccess = ref(false)
 const userRating = ref<number>(0)
 const savingRating = ref(false)
 
+// Schedule state
+const scheduledOutfit = ref<any>(null)
+const showScheduleModal = ref(false)
+const schedulingDate = ref('')
+const schedulingNotes = ref('')
+const scheduleSaving = ref(false)
+const scheduleError = ref('')
+
 definePageMeta({ layout: 'default' })
 useHead({ title: 'Outfit — Clad' })
 
@@ -70,7 +78,51 @@ async function setRating(rating: number) {
   finally { savingRating.value = false }
 }
 
-onMounted(fetchOutfit)
+async function checkExistingSchedule() {
+  try {
+    const data: any = await $fetch('/api/calendar', {
+      params: {
+        month: new Date().getMonth() + 1,
+        year: new Date().getFullYear()
+      }
+    })
+    // Find if this outfit is scheduled
+    for (const day of data.dates || []) {
+      const match = day.outfits.find((o: any) => o.outfitId === route.params.id)
+      if (match) {
+        scheduledOutfit.value = match
+        break
+      }
+    }
+  } catch { /* ignore */ }
+}
+
+async function scheduleFromDetail() {
+  if (!schedulingDate.value) return
+  scheduleSaving.value = true
+  scheduleError.value = ''
+  try {
+    const result: any = await $fetch('/api/calendar', {
+      method: 'POST',
+      body: {
+        outfitId: route.params.id,
+        scheduledDate: schedulingDate.value,
+        notes: schedulingNotes.value || null,
+      },
+    })
+    scheduledOutfit.value = result
+    showScheduleModal.value = false
+  } catch (err: any) {
+    scheduleError.value = err?.data?.message || 'Couldn\'t schedule outfit. Please try again.'
+  } finally {
+    scheduleSaving.value = false
+  }
+}
+
+onMounted(() => {
+  fetchOutfit()
+  checkExistingSchedule()
+})
 </script>
 
 <template>
@@ -143,6 +195,56 @@ onMounted(fetchOutfit)
           </button>
         </div>
       </div>
+
+      <!-- Schedule section -->
+      <div class="mb-4">
+        <!-- Scheduled badge -->
+        <div v-if="scheduledOutfit"
+             class="mb-3 inline-flex items-center gap-1.5 rounded-full bg-brand-100 px-3 py-1 text-sm text-brand-700">
+          📅 Scheduled for {{ new Date(scheduledOutfit.scheduledDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) }}
+        </div>
+
+        <button @click="showScheduleModal = true"
+                class="w-full rounded-lg bg-brand-600 py-3 font-medium text-white hover:bg-brand-700 transition">
+          📅 {{ scheduledOutfit ? 'Reschedule' : 'Schedule Outfit' }}
+        </button>
+      </div>
+
+      <!-- Schedule modal -->
+      <Teleport to="body">
+        <div v-if="showScheduleModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+             @click.self="showScheduleModal = false">
+          <div class="w-full max-w-md rounded-xl bg-white p-6 shadow-xl" role="dialog" aria-modal="true">
+            <h2 class="mb-4 text-lg font-semibold text-brand-900">📅 Schedule Outfit</h2>
+
+            <div class="mb-4">
+              <label class="mb-1 block text-sm font-medium text-brand-700">Date</label>
+              <input type="date" v-model="schedulingDate"
+                     class="w-full rounded-lg border border-brand-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-300" />
+            </div>
+
+            <div class="mb-4">
+              <label class="mb-1 block text-sm font-medium text-brand-700">Notes (optional)</label>
+              <textarea v-model="schedulingNotes" placeholder="Any notes for this day?"
+                        class="w-full rounded-lg border border-brand-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-300"
+                        rows="2" />
+            </div>
+
+            <p v-if="scheduleError" class="mb-3 text-sm text-red-600">{{ scheduleError }}</p>
+
+            <div class="flex gap-3">
+              <button @click="showScheduleModal = false"
+                      class="flex-1 rounded-lg border border-brand-300 px-4 py-2.5 text-sm font-medium text-brand-700 hover:bg-brand-50 transition">
+                Cancel
+              </button>
+              <button @click="scheduleFromDetail" :disabled="!schedulingDate || scheduleSaving"
+                      class="flex-1 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-700 transition disabled:opacity-50">
+                {{ scheduleSaving ? 'Scheduling...' : '📅 Schedule' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </Teleport>
 
       <button
         @click="archiveOutfit"

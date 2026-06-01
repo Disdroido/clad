@@ -12,6 +12,7 @@ function isActive(path: string) {
 const navItems = [
   { label: 'Wardrobe', to: '/wardrobe', icon: '👔' },
   { label: 'Outfits', to: '/outfits', icon: '✨' },
+  { label: 'Calendar', to: '/calendar', icon: '📅' },
   { label: 'Insights', to: '/insights', icon: '📊' },
   { label: 'What I Wore', to: '/outfits/wear-history', icon: '📅' },
 ] as const
@@ -24,8 +25,10 @@ const navItems = [
       v-if="showNav"
       class="fixed inset-y-0 left-0 z-40 hidden w-56 border-r border-brand-200 bg-white md:flex md:flex-col"
     >
-      <div class="flex h-14 items-center border-b border-brand-100 px-6">
-        <NuxtLink to="/wardrobe" class="text-lg font-bold tracking-tight text-brand-700">Clad</NuxtLink>
+      <div class="flex h-14 items-center border-b border-brand-100 px-4">
+        <NuxtLink to="/wardrobe" class="inline-flex items-center">
+          <img src="/clad-logo-horizontal.png" alt="Clad" class="h-8 w-auto" />
+        </NuxtLink>
       </div>
       <nav class="flex-1 space-y-1 p-3">
         <NuxtLink
