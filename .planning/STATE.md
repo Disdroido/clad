@@ -4,7 +4,7 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 02
 status: unknown
-last_updated: "2026-06-01T02:47:35.150Z"
+last_updated: "2026-06-01T02:48:30.000Z"
 progress:
   total_phases: 8
   completed_phases: 0
@@ -22,9 +22,9 @@ progress:
 
 - Phase 01: ✅ Complete (all requirements met)
 - Phase 02: 🚧 In Progress (1/3 plans complete)
-  - [x] 02-01-PLAN.md — Wear tracking schema and API *(pending execution)*
-  - [x] 02-02-PLAN.md — Wear tracking UI and outfit rating *(completed)*
-  - [ ] 02-03-PLAN.md — Smart generation with wear recency *(pending)*
+  - [x] 02-01-PLAN.md — Wear tracking schema and API ✅
+  - [ ] 02-02-PLAN.md — Wear tracking UI and outfit rating
+  - [ ] 02-03-PLAN.md — Smart generation with wear recency
 - Phases 03-08: 🔮 Defined in roadmap
 
 ## Decisions
@@ -37,6 +37,7 @@ progress:
 - **CSS:** TailwindCSS v4
 - **Routing:** Nuxt 4 file-based routing
 - **Image handling:** Client-side compression before upload
+- [Phase 02]: Wear events use separate table (outfit_wear_events) instead of jsonb array for query efficiency
 
 ## Blockers
 
