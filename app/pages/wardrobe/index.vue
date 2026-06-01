@@ -12,6 +12,16 @@ const activeTab = computed(() => {
 const wardrobeStore = useWardrobeStore()
 
 onMounted(() => wardrobeStore.fetchItems())
+
+function conditionLabel(condition: string): string {
+  const labels: Record<string, string> = {
+    new: 'New',
+    good: 'Good',
+    worn: 'Worn',
+    needs_repair: 'Needs Repair',
+  }
+  return labels[condition] || 'Good'
+}
 </script>
 
 <template>
@@ -44,7 +54,8 @@ onMounted(() => wardrobeStore.fetchItems())
       </NuxtLink>
       <NuxtLink
         to="/wardrobe/laundry"
-        class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-brand-500 hover:text-brand-600"
+        class="px-4 py-2 text-sm font-medium border-b-2"
+        :class="activeTab === 'laundry' ? 'border-brand-600 text-brand-600' : 'border-transparent text-brand-500 hover:text-brand-600'"
       >
         Laundry
       </NuxtLink>
@@ -69,13 +80,27 @@ onMounted(() => wardrobeStore.fetchItems())
         v-for="item in wardrobeStore.items"
         :key="item.id"
         :to="`/wardrobe/items/${item.id}`"
-        class="overflow-hidden rounded-lg bg-white shadow transition hover:shadow-md hover:-translate-y-0.5"
+        :class="[
+          'overflow-hidden rounded-lg bg-white shadow transition hover:shadow-md hover:-translate-y-0.5',
+          { 'opacity-75': !item.isClean },
+        ]"
       >
         <img :src="item.imageUrl" :alt="item.clothingType" class="aspect-square w-full object-cover" />
         <div class="p-3">
           <p class="truncate font-medium text-brand-900 capitalize">{{ item.clothingType }}</p>
           <p class="text-sm text-brand-500">{{ item.colour }}</p>
           <p v-if="item.clothingSubType" class="text-xs text-brand-400 capitalize">{{ item.clothingSubType }}</p>
+          <span
+            class="text-xs px-1.5 py-0.5 rounded-full inline-block mt-1"
+            :class="{
+              'bg-green-100 text-green-700': item.condition === 'new',
+              'bg-blue-100 text-blue-700': item.condition === 'good' || !item.condition,
+              'bg-amber-100 text-amber-700': item.condition === 'worn',
+              'bg-red-100 text-red-700': item.condition === 'needs_repair',
+            }"
+          >
+            {{ conditionLabel(item.condition) }}
+          </span>
         </div>
       </NuxtLink>
     </div>
