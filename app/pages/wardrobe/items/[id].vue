@@ -77,7 +77,7 @@ async function remove() {
 
 <template>
   <div v-if="loading" class="flex justify-center py-20">
-    <span class="text-brand-500">Loading...</span>
+    <span class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-brand-200 border-t-brand-600" />
   </div>
 
   <div v-else-if="error && !item" class="flex flex-col items-center gap-4 py-20">
@@ -85,18 +85,19 @@ async function remove() {
     <NuxtLink to="/wardrobe" class="text-brand-600 underline">Back to Wardrobe</NuxtLink>
   </div>
 
-  <div v-else-if="item" class="mx-auto max-w-lg">
-    <div class="mb-4 flex items-center gap-2">
-      <NuxtLink to="/wardrobe" class="text-sm text-brand-400 hover:text-brand-600">&larr; Back</NuxtLink>
+  <div v-else-if="item" class="mx-auto max-w-3xl">
+    <div class="mb-4">
+      <NuxtLink to="/wardrobe" class="text-sm text-brand-400 hover:text-brand-600">&larr; Back to Wardrobe</NuxtLink>
     </div>
 
-    <img
-      :src="item.imageUrl"
-      :alt="item.clothingType"
-      class="mb-6 aspect-square w-full rounded-xl object-cover shadow"
-    />
+    <div class="flex flex-col gap-6 md:flex-row">
+      <img
+        :src="item.imageUrl"
+        :alt="item.clothingType"
+        class="aspect-square w-full rounded-xl object-cover shadow md:w-80"
+      />
 
-    <div class="space-y-4">
+    <div class="flex-1 space-y-4">
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-xs font-medium text-brand-600">Type</label>
@@ -181,6 +182,7 @@ async function remove() {
           Delete
         </button>
       </div>
+    </div>
     </div>
   </div>
 </template>

@@ -35,7 +35,7 @@ onMounted(async () => {
     </div>
 
     <div v-if="loading" class="flex justify-center py-20">
-      <span class="text-brand-500">Loading...</span>
+      <span class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-brand-200 border-t-brand-600" />
     </div>
 
     <div v-else-if="items.length === 0" class="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-brand-200 py-20">

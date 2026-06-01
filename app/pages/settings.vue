@@ -13,7 +13,7 @@ async function signOut() {
 </script>
 
 <template>
-  <div class="max-w-lg mx-auto">
+  <div class="mx-auto max-w-2xl">
     <h1 class="text-2xl font-bold text-brand-950 mb-6">Settings</h1>
 
     <div v-if="session" class="mb-6 rounded-lg bg-white p-4 shadow">

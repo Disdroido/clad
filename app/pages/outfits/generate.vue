@@ -31,7 +31,7 @@ function generateOutfit() {
     <p class="text-brand-500 mb-6">What's the occasion?</p>
 
     <!-- Occasion picker -->
-    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 mb-8">
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 mb-8">
       <button
         v-for="occ in occasions"
         :key="occ.id"

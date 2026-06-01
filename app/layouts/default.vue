@@ -43,7 +43,7 @@ const navItems = [
     </aside>
 
     <main
-      class="mx-auto max-w-5xl px-4 py-6"
+      class="mx-auto max-w-6xl px-4 py-6 md:px-8"
       :class="[
         showNav ? 'pb-24 md:pb-6' : '',
         showNav ? 'md:ml-56' : '',
