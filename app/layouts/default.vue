@@ -13,6 +13,7 @@ const navItems = [
   { label: 'Wardrobe', to: '/wardrobe', icon: '👔' },
   { label: 'Outfits', to: '/outfits', icon: '✨' },
   { label: 'Calendar', to: '/calendar', icon: '📅' },
+  { label: 'Trips', to: '/trips', icon: '✈️' },
   { label: 'Insights', to: '/insights', icon: '📊' },
   { label: 'What I Wore', to: '/outfits/wear-history', icon: '📅' },
 ] as const
