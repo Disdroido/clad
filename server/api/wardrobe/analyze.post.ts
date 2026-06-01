@@ -10,7 +10,13 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'imageUrl is required' })
   }
 
-  const result = await analyzeClothingImage(imageUrl)
+  let result
+  try {
+    result = await analyzeClothingImage(imageUrl)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Analysis failed'
+    throw createError({ statusCode: 502, message: `AI analysis failed: ${message}` })
+  }
 
   return {
     clothingType: result.clothing_type || 'other',

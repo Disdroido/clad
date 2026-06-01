@@ -15,16 +15,9 @@ export async function getServerSession(event: H3Event) {
  * Use this in protected API handlers.
  */
 export async function requireUserId(event: H3Event): Promise<string> {
-  try {
-    const session = await getServerSession(event)
-    if (!session?.user?.id) {
-      throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
-    }
-    return session.user.id
-  } catch (err) {
-    if (err && typeof err === 'object' && 'statusCode' in err) {
-      throw err
-    }
+  const session = await getServerSession(event).catch(() => null)
+  if (!session?.user?.id) {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
   }
+  return session.user.id
 }
