@@ -19,7 +19,7 @@ export async function analyzeClothingImage(imageUrl: string) {
   const client = getOpenRouterClient()
 
   const response = await client.chat.completions.create({
-    model: 'google/gemini-2.0-flash-lite', // cheap vision-capable model
+    model: 'google/gemini-2.0-flash-lite-001', // cheap vision-capable model
     messages: [
       {
         role: 'user',
@@ -63,7 +63,7 @@ export async function generateOutfitReasoning(
   const client = getOpenRouterClient()
 
   const response = await client.chat.completions.create({
-    model: 'google/gemini-2.0-flash-lite', // same model works fine for text too
+    model: 'google/gemini-2.0-flash-lite-001', // same model works fine for text too
     messages: [
       {
         role: 'system',
