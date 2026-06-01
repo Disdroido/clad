@@ -18,6 +18,7 @@ export interface UserProfile {
   formalityDefault?: string
   stylePreferences?: string[]
   climate?: string
+  recentlyWornItemIds?: string[]  // item IDs worn in the last 7 days
 }
 
 // Colour wheel for harmony checks
@@ -165,18 +166,36 @@ export function generateValidOutfits(items: Item[], profile: UserProfile, occasi
       }
     }
 
+    // Penalize recently worn items (deprioritize, don't exclude)
+    if (profile.recentlyWornItemIds?.length) {
+      for (const item of base) {
+        if (profile.recentlyWornItemIds.includes(item.id)) {
+          score -= 5
+        }
+      }
+    }
+
     // Add optional outerwear that matches
     for (const ow of outerwear) {
       if (baseColours.every(c => areColoursHarmonious(c, ow.colour))) {
         const combo = [...base, ow]
         const patterns = combo.map(i => i.pattern)
         if (!hasPatternConflict(patterns)) {
-          const comboScore = score + 1 // small bonus for layering
+          let comboScore = score + 1 // small bonus for layering
+
+          // Penalize recently worn outerwear
+          if (profile.recentlyWornItemIds?.includes(ow.id)) {
+            comboScore -= 5
+          }
 
           // Add shoes
           for (const shoe of shoes) {
             if (combo.every(item => areColoursHarmonious(item.colour, shoe.colour))) {
-              outfits.push({ items: [...combo, shoe], score: comboScore + 1 })
+              let finalScore = comboScore + 1
+              if (profile.recentlyWornItemIds?.includes(shoe.id)) {
+                finalScore -= 5
+              }
+              outfits.push({ items: [...combo, shoe], score: finalScore })
             }
           }
         }
@@ -186,7 +205,11 @@ export function generateValidOutfits(items: Item[], profile: UserProfile, occasi
     // Also add without outerwear
     for (const shoe of shoes) {
       if (base.every(item => areColoursHarmonious(item.colour, shoe.colour))) {
-        outfits.push({ items: [...base, shoe], score: score + 1 })
+        let shoeScore = score + 1
+        if (profile.recentlyWornItemIds?.includes(shoe.id)) {
+          shoeScore -= 5
+        }
+        outfits.push({ items: [...base, shoe], score: shoeScore })
       }
     }
 
