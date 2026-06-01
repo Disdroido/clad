@@ -56,8 +56,9 @@ onMounted(async () => {
       >
         <img :src="item.imageUrl" :alt="item.clothingType" class="aspect-square w-full object-cover" />
         <div class="p-3">
-          <p class="font-medium text-brand-900 capitalize">{{ item.clothingType }}</p>
+          <p class="truncate font-medium text-brand-900 capitalize">{{ item.clothingType }}</p>
           <p class="text-sm text-brand-500">{{ item.colour }}</p>
+          <p v-if="item.clothingSubType" class="text-xs text-brand-400 capitalize">{{ item.clothingSubType }}</p>
         </div>
       </div>
     </div>

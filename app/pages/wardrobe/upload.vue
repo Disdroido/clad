@@ -12,6 +12,7 @@ useHead({
 
 interface AnalysisResult {
   clothingType: string
+  clothingSubType: string | null
   colour: string
   pattern: string
   material: string
@@ -49,7 +50,8 @@ function statusLabel(item: UploadItem): string {
     case 'done':
       if (item.saved) return 'Saved to wardrobe'
       if (item.result) {
-        return `${item.result.clothingType} — ${item.result.colour} (${Math.round(item.result.confidence * 100)}% confident)`
+        const sub = item.result.clothingSubType ? ` ${item.result.clothingSubType}` : ''
+        return `${item.result.clothingType}${sub} — ${item.result.colour} (${Math.round(item.result.confidence * 100)}% confident)`
       }
       return 'Analysis complete'
     case 'error':
@@ -141,6 +143,7 @@ async function saveToWardrobe() {
         body: {
           imageUrl: item.imageUrl,
           clothingType: item.result.clothingType,
+          clothingSubType: item.result.clothingSubType,
           colour: item.result.colour,
           pattern: item.result.pattern,
           material: item.result.material,
@@ -263,6 +266,10 @@ watch(files, onFilesSelected)
           <div>
             <label class="block text-xs font-medium text-brand-600">Material</label>
             <input v-model="item.result.material" type="text" class="mt-1 w-full rounded border border-brand-200 px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-brand-600">Sub-Type</label>
+            <input v-model="item.result.clothingSubType" type="text" placeholder="e.g. henley, polo, bomber" class="mt-1 w-full rounded border border-brand-200 px-3 py-2 text-sm" />
           </div>
         </div>
       </div>

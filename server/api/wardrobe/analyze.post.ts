@@ -20,6 +20,7 @@ export default defineEventHandler(async (event) => {
 
   return {
     clothingType: result.clothing_type || 'other',
+    clothingSubType: result.clothing_sub_type || null,
     colour: result.colour || 'unknown',
     pattern: result.pattern || 'solid',
     material: result.material || 'unknown',

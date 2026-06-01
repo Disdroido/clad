@@ -8,6 +8,13 @@
       "when": 1780124448625,
       "tag": "0000_init",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1780274400000,
+      "tag": "0001_add_clothing_sub_type",
+      "breakpoints": true
     }
   ]
 }

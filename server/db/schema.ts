@@ -116,6 +116,7 @@ export const wardrobeItems = pgTable('wardrobe_items', {
   imageUrl: text('image_url').notNull(),
   thumbnailUrl: text('thumbnail_url'),
   clothingType: clothingTypeEnum('clothing_type').notNull(),
+  clothingSubType: varchar('clothing_sub_type', { length: 100 }),
   colour: varchar('colour', { length: 100 }).notNull(),
   pattern: patternEnum('pattern').default('solid'),
   material: varchar('material', { length: 100 }),

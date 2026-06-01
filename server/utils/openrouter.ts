@@ -29,6 +29,7 @@ export async function analyzeClothingImage(imageUrl: string) {
             text: `Analyze this clothing item image and return a JSON object with these exact fields:
 {
   "clothing_type": "one of: t-shirt, shirt, blouse, sweater, hoodie, jacket, coat, jeans, trousers, shorts, skirt, dress, shoes, accessory, other",
+  "clothing_sub_type": "a specific subtype if known (e.g., henley, polo, button-down, crewneck, V-neck, bomber, blazer, cardigan, chinos, leggings, joggers, cargo, crop top, tank top, cami, flannel, denim jacket, puffer, windbreaker, trench coat, peacoat, hoodie, zip-up, quarter-zip, turtleneck, tube top, bodysuit, romper, jumpsuit, overalls, vest, waistcoat, sarong, kilt, mini skirt, midi skirt, maxi skirt, A-line, pencil skirt, pleated, wrap dress, shift dress, maxi dress, sundress, slip dress, sneakers, boots, loafers, sandals, heels, flats, oxfords, mules, slippers, or set to null if unsure)",
   "colour": "the dominant colour name (e.g., navy blue, burgundy, cream, black, white)",
   "pattern": "one of: solid, striped, checked, floral, graphic, abstract",
   "material": "the apparent fabric material (e.g., cotton, denim, wool, silk, linen, polyester)",
