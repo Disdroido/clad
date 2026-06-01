@@ -34,6 +34,51 @@ const data = ref<AnalyticsResponse | null>(null)
 const loading = ref(true)
 const error = ref(false)
 
+// Gap analysis state
+const gapData = ref<GapAnalysisResponse | null>(null)
+const gapLoading = ref(false)
+const gapError = ref(false)
+
+interface GapAnalysisResponse {
+  gaps: Array<{ type: string; detail: string; severity: string }>
+  aiRecommendations: {
+    recommendations: Array<{
+      gap: string; suggestion: string; specificItems: string[]
+      recommendedColours: string[]; whyItMatters: string
+    }>
+    surpriseInsight: string
+    longTermGoal: string
+  } | null
+}
+
+async function analyzeGaps() {
+  gapLoading.value = true
+  gapError.value = false
+  try {
+    gapData.value = await $fetch<GapAnalysisResponse>('/api/analytics/gaps', { method: 'POST' })
+  } catch {
+    gapError.value = true
+    gapData.value = null
+  } finally {
+    gapLoading.value = false
+  }
+}
+
+// Severity badge color mapping
+const severityBadge: Record<string, string> = {
+  high: 'bg-red-100 text-red-700',
+  medium: 'bg-amber-100 text-amber-700',
+  low: 'bg-blue-100 text-blue-700',
+}
+
+// Gap type labels
+const gapTypeLabels: Record<string, string> = {
+  missing_category: 'Missing Category',
+  imbalance: 'Category Imbalance',
+  season_gap: 'Season Gap',
+  colour_concentration: 'Colour Concentration',
+}
+
 // Colour mapping for palette swatches
 const COLOUR_HEX: Record<string, string> = {
   'black': '#1a1a1a', 'white': '#ffffff', 'navy': '#1a2744',
@@ -206,6 +251,113 @@ const hasData = computed(() => data.value?.composition?.length)
             <div class="p-2">
               <p class="text-sm font-medium text-brand-900 capitalize truncate">{{ c.colour }}</p>
               <p class="text-xs text-brand-500">{{ c.count }} items ({{ c.percentage }}%)</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 4: Gap Analysis -->
+      <section class="rounded-xl border border-brand-100 bg-white p-6 shadow-sm">
+        <h2 class="mb-1 text-lg font-semibold text-brand-900">Wardrobe Gap Analysis</h2>
+        <p class="mb-4 text-sm text-brand-500">
+          Want more out of your wardrobe? Let AI find gaps and suggest what to add.
+        </p>
+
+        <!-- Not yet analyzed — show CTA -->
+        <div v-if="!gapData && !gapLoading && !gapError"
+             class="flex flex-col items-center rounded-lg border-2 border-dashed border-brand-200 py-10">
+          <p class="mb-4 text-brand-500">Discover what's missing from your wardrobe</p>
+          <button @click="analyzeGaps"
+                  class="rounded-lg bg-brand-600 px-6 py-3 text-white hover:bg-brand-700 transition">
+            Analyze My Wardrobe
+          </button>
+        </div>
+
+        <!-- Loading state -->
+        <div v-if="gapLoading" class="flex flex-col items-center py-10">
+          <span class="mb-3 inline-block h-8 w-8 animate-spin rounded-full border-4 border-brand-200 border-t-brand-600" />
+          <p class="text-sm text-brand-500">AI is analyzing your wardrobe...</p>
+        </div>
+
+        <!-- Error state -->
+        <div v-if="gapError" class="rounded-lg border border-red-200 bg-red-50 p-4 text-center">
+          <p class="text-sm text-red-700">Analysis failed. Please try again.</p>
+          <button @click="analyzeGaps" class="mt-2 text-sm font-medium text-brand-600 hover:text-brand-700">
+            Try Again
+          </button>
+        </div>
+
+        <!-- Results -->
+        <div v-if="gapData" class="space-y-4">
+          <!-- No gaps found -->
+          <div v-if="gapData.gaps.length === 0" class="rounded-lg bg-green-50 p-4 text-center">
+            <p class="text-green-700 font-medium">Your wardrobe looks well-balanced! 🎉</p>
+            <p class="mt-1 text-sm text-green-600">No major gaps detected.</p>
+          </div>
+
+          <!-- Detected gaps -->
+          <div v-else>
+            <div v-for="(gap, idx) in gapData.gaps" :key="idx"
+                 class="mb-3 rounded-lg border border-brand-100 bg-brand-50 p-4">
+              <div class="mb-2 flex items-center justify-between">
+                <span class="rounded-full px-2 py-0.5 text-xs font-medium"
+                      :class="severityBadge[gap.severity] || 'bg-brand-100 text-brand-700'">
+                  {{ gap.severity.toUpperCase() }}
+                </span>
+                <span class="text-xs font-medium text-brand-500">
+                  {{ gapTypeLabels[gap.type] || gap.type }}
+                </span>
+              </div>
+              <p class="text-sm text-brand-800 capitalize">
+                {{ gap.type === 'missing_category' ? `No ${gap.detail} items found` :
+                   gap.type === 'imbalance' ? `Too many ${gap.detail.replace('too_many_', '')}` :
+                   gap.type === 'season_gap' ? `No ${gap.detail} items` :
+                   gap.type === 'colour_concentration' ? `${gap.detail} dominates your wardrobe` :
+                   gap.detail }}
+              </p>
+
+              <!-- AI enrichment for this gap (if available) -->
+              <div v-if="gapData.aiRecommendations">
+                <div v-for="rec in gapData.aiRecommendations.recommendations.filter(r => r.gap.includes(gap.detail) || r.gap.includes(gap.type))"
+                     :key="rec.gap" class="mt-3 border-t border-brand-200 pt-3">
+                  <p class="text-sm text-brand-700">{{ rec.suggestion }}</p>
+                  <div v-if="rec.specificItems?.length" class="mt-2">
+                    <p class="text-xs font-medium text-brand-500">Try adding:</p>
+                    <div class="mt-1 flex flex-wrap gap-2">
+                      <span v-for="item in rec.specificItems" :key="item"
+                            class="rounded-full bg-brand-100 px-2.5 py-0.5 text-xs text-brand-700">
+                        {{ item }}
+                      </span>
+                    </div>
+                  </div>
+                  <div v-if="rec.recommendedColours?.length" class="mt-1">
+                    <p class="text-xs font-medium text-brand-500">Recommended colours:</p>
+                    <p class="text-xs text-brand-600">{{ rec.recommendedColours.join(', ') }}</p>
+                  </div>
+                  <p v-if="rec.whyItMatters" class="mt-1 text-xs italic text-brand-400">
+                    {{ rec.whyItMatters }}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Surprise insight & long-term goal (from AI) -->
+            <div v-if="gapData.aiRecommendations" class="mt-4 space-y-3 rounded-lg bg-brand-50 p-4 border border-brand-100">
+              <div v-if="gapData.aiRecommendations.surpriseInsight">
+                <p class="text-xs font-medium text-brand-500 uppercase tracking-wide">Surprise Insight</p>
+                <p class="mt-1 text-sm text-brand-700">{{ gapData.aiRecommendations.surpriseInsight }}</p>
+              </div>
+              <div v-if="gapData.aiRecommendations.longTermGoal">
+                <p class="text-xs font-medium text-brand-500 uppercase tracking-wide">Long-Term Goal</p>
+                <p class="mt-1 text-sm text-brand-700">{{ gapData.aiRecommendations.longTermGoal }}</p>
+              </div>
+            </div>
+
+            <!-- Rules-only fallback notice -->
+            <div v-if="!gapData.aiRecommendations && gapData.gaps.length > 0"
+                 class="rounded-lg bg-amber-50 p-3 text-center text-xs text-amber-600">
+              AI suggestions unavailable — showing rule-based analysis.<br>
+              <button @click="analyzeGaps" class="font-medium underline">Try AI analysis again</button>
             </div>
           </div>
         </div>
