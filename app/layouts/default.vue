@@ -47,15 +47,14 @@ const navItems = [
       </div>
     </aside>
 
-    <main
-      class="mx-auto max-w-6xl px-4 py-6 md:px-8"
-      :class="[
-        showNav ? 'pb-24 md:pb-6' : '',
-        showNav ? 'md:ml-56' : '',
-      ]"
-    >
-      <slot />
-    </main>
+    <div :class="showNav ? 'md:pl-56' : ''">
+      <main
+        class="mx-auto max-w-6xl px-4 py-6 md:px-8"
+        :class="showNav ? 'pb-24 md:pb-6' : ''"
+      >
+        <slot />
+      </main>
+    </div>
     <BottomNav v-if="showNav" />
   </div>
 </template>
