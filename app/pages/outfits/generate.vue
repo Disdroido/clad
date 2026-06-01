@@ -18,6 +18,7 @@ const occasions = [
 ]
 
 const selectedOccasion = ref<string | null>(null)
+const includeLaundry = ref(false)
 
 // Weather state
 const weather = ref<{
@@ -56,6 +57,7 @@ function generateOutfit() {
     query.lat = String(coords.value.lat)
     query.lon = String(coords.value.lon)
   }
+  query.includeLaundry = String(includeLaundry.value)
   router.push({ path: '/outfits/result', query })
 }
 </script>
@@ -92,6 +94,30 @@ function generateOutfit() {
         <div class="text-2xl mb-1">{{ occ.icon }}</div>
         <p class="font-medium text-brand-900">{{ occ.label }}</p>
         <p class="text-sm text-brand-500">{{ occ.desc }}</p>
+      </button>
+    </div>
+
+    <!-- Include laundry items toggle -->
+    <div class="mb-6 flex items-center justify-between rounded-lg bg-brand-50 px-4 py-3">
+      <div>
+        <p class="text-sm font-medium text-brand-800">Include laundry items</p>
+        <p class="text-xs text-brand-500">Show outfits with items in the wash</p>
+      </div>
+      <button
+        @click="includeLaundry = !includeLaundry"
+        :class="[
+          'relative inline-flex h-6 w-11 items-center rounded-full transition',
+          includeLaundry ? 'bg-brand-600' : 'bg-brand-200',
+        ]"
+        role="switch"
+        :aria-checked="includeLaundry"
+      >
+        <span
+          :class="[
+            'inline-block h-4 w-4 transform rounded-full bg-white transition',
+            includeLaundry ? 'translate-x-6' : 'translate-x-1',
+          ]"
+        />
       </button>
     </div>
 

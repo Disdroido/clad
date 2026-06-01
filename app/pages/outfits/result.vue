@@ -15,6 +15,7 @@ const showWeatherFallback = ref(false)
 
 const lat = computed(() => route.query.lat ? parseFloat(route.query.lat as string) : undefined)
 const lon = computed(() => route.query.lon ? parseFloat(route.query.lon as string) : undefined)
+const includeLaundry = computed(() => route.query.includeLaundry === 'true')
 
 async function generateOutfit() {
   loading.value = true
@@ -25,6 +26,7 @@ async function generateOutfit() {
       body.lat = lat.value
       body.lon = lon.value
     }
+    body.skipLaundry = includeLaundry.value
     outfitResult.value = await $fetch('/api/outfits/generate', {
       method: 'POST',
       body,
