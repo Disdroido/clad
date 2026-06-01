@@ -4,12 +4,12 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 07
 status: Executing Phase 07
-last_updated: "2026-06-01T10:45:30.350Z"
+last_updated: "2026-06-01T10:52:41.826Z"
 progress:
   total_phases: 8
   completed_phases: 5
   total_plans: 18
-  completed_plans: 16
+  completed_plans: 17
 ---
 
 # Current State
@@ -37,6 +37,14 @@ progress:
   - [x] 05-01-PLAN.md — Calendar and trips API endpoints ✅
   - [x] 05-02-PLAN.md — Calendar page UI ✅
   - [x] 05-03-PLAN.md — Trip management pages & AI packing list ✅
+- Phase 06: 🚧 In Progress (3/3 plans complete)
+  - [x] 06-01-PLAN.md — Social sharing backend + public pages ✅
+  - [x] 06-02-PLAN.md — Engagement API (likes/saves/follows) ✅
+  - [x] 06-03-PLAN.md — Discover feed + public profiles UI ✅
+- Phase 07: 🚧 In Progress (2/3 plans complete)
+  - [x] 07-01-PLAN.md — Wishlist & schema foundation ✅
+  - [x] 07-02-PLAN.md — Laundry & lifecycle backend ✅
+  - [ ] 07-03-PLAN.md — Laundry & lifecycle UI
 - Phases 05-08: 🔮 Defined in roadmap
 
 ## Decisions
@@ -76,6 +84,11 @@ progress:
 - [Phase 06-social-sharing]: Share page uses no layout (no definePageMeta) for clean marketing-style chrome-free experience
 - [Phase 06-social-sharing]: Discover and profile pages use default layout (sidebar + bottom nav) since they are within the app
 - [Phase 06-social-sharing]: og:image falls back to first item thumbnailUrl or imageUrl, then Clad logo for social preview cards
+- [Phase 07-01]: condition, brand, pricePaid, purchaseDate columns added to wardrobeItems with conditionEnum (new/good/worn/needs_repair)
+- [Phase 07-02]: pricePaid stored as integer cents with dollar-to-cent conversion on write — avoids float precision issues
+- [Phase 07-02]: isClean filter uses `!== false` (not `=== true`) so items without the field pass through — backward compatible
+- [Phase 07-02]: skipDirty defaults to true (skip dirty items by default), generate endpoint inverts via `!skipLaundry`
+- [Phase 07-02]: Condition penalty: -2 for worn/needs_repair, +1 for new — applied to both base items and outerwear
 
 ## Blockers
 
