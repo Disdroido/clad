@@ -26,6 +26,7 @@ Clad is an AI-powered wardrobe management app. Users photograph their clothing, 
 ## Current State
 **Phase 02 (Outfit Lifecycle) complete** — Wear tracking infrastructure, rating, wear history UI, and wear-aware outfit generation all implemented.
 **Phase 03 (Weather Integration) complete** — WeatherAPI.com integration, temperature-aware outfit scoring, geolocation composable, and weather badge UI all implemented.
-**Phase 04 (Wardrobe Analytics & Insights)** — next up.
+**Phase 04 (Wardrobe Analytics & Insights) complete** — Analytics API, Chart.js insights dashboard, colour palette analysis, most-worn tracking, and AI-powered gap analysis with shopping suggestions all implemented.
+**Phase 05 (Outfit Planning Calendar)** — next up.
 
 *Last updated: 2026-06-01*
