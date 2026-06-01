@@ -32,7 +32,7 @@
 **Goal:** Track what users actually wear, add ratings, and make outfit generation smarter by learning from wear patterns.
 
 **Plans:**
-- [x] 02-01-PLAN.md — Wear tracking schema and API (3 tasks, Wave 1)
+3/3 plans complete
 - [x] 02-02-PLAN.md — Wear tracking UI and outfit rating (3 tasks, Wave 1, parallel)
 - [x] 02-03-PLAN.md — Smart generation with wear recency (2 tasks, Wave 2)
 
@@ -46,13 +46,14 @@
 ---
 
 ## Phase 03: Weather Integration
-**Status:** 🔮 Proposed
+**Status:** 🚧 In Progress (3/3 plans created)
 **Goal:** Enhance outfit suggestions with real-time weather data, temperature-aware filtering.
 
 **Plans:**
-- [ ] 03-01-PLAN.md — Weather API integration and data model
-- [ ] 03-02-PLAN.md — Weather-aware outfit suggestions
-- [ ] 03-03-PLAN.md — Weather display in UI
+3/3 plans created
+- [ ] 03-01-PLAN.md — Weather API integration and data model (3 tasks, Wave 1)
+- [ ] 03-02-PLAN.md — Weather-aware outfit suggestions (1 task, Wave 2)
+- [ ] 03-03-PLAN.md — Weather display in UI (3 tasks, Wave 2)
 
 **Requirements:**
 - [WEATHER-01] App fetches current/local weather when generating outfits
