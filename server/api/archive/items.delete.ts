@@ -1,4 +1,4 @@
-import { inArray } from 'drizzle-orm'
+import { inArray, eq, and } from 'drizzle-orm'
 import { useDb } from '~~/server/db'
 import { wardrobeItems } from '~~/server/db/schema'
 import { requireUserId } from '~~/server/utils/session'
@@ -16,8 +16,7 @@ export default defineEventHandler(async (event) => {
 
   const deleted = await db
     .delete(wardrobeItems)
-    .where(inArray(wardrobeItems.id, ids))
-    .where(eq(wardrobeItems.userId, userId))
+    .where(and(inArray(wardrobeItems.id, ids), eq(wardrobeItems.userId, userId)))
     .returning({ id: wardrobeItems.id })
 
   return { deleted: deleted.map(d => d.id) }

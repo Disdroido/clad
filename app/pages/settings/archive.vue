@@ -84,7 +84,7 @@ onMounted(fetchArchived)
 </script>
 
 <template>
-  <div class="mx-auto max-w-4xl">
+  <div>
     <div class="mb-4">
       <NuxtLink to="/settings" class="text-sm text-brand-400 hover:text-brand-600">&larr; Settings</NuxtLink>
     </div>
