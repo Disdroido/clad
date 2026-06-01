@@ -1,6 +1,23 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'default' })
 useHead({ title: 'My Outfits — Clad' })
+
+const outfits = ref<any[]>([])
+const loading = ref(true)
+
+async function fetchOutfits() {
+  loading.value = true
+  try {
+    const res = await $fetch('/api/outfits')
+    outfits.value = res.outfits
+  } catch {
+    outfits.value = []
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(fetchOutfits)
 </script>
 
 <template>
@@ -15,7 +32,14 @@ useHead({ title: 'My Outfits — Clad' })
       </NuxtLink>
     </div>
 
-    <div class="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-brand-200 py-20">
+    <div v-if="loading" class="flex justify-center py-20">
+      <span class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-brand-200 border-t-brand-600" />
+    </div>
+
+    <div
+      v-else-if="outfits.length === 0"
+      class="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-brand-200 py-20"
+    >
       <p class="mb-4 text-brand-500">No outfits yet</p>
       <NuxtLink
         to="/outfits/generate"
@@ -23,6 +47,22 @@ useHead({ title: 'My Outfits — Clad' })
       >
         Generate Your First Outfit
       </NuxtLink>
+    </div>
+
+    <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div
+        v-for="outfit in outfits"
+        :key="outfit.id"
+        class="rounded-xl bg-white p-4 shadow-sm border border-brand-100"
+      >
+        <div class="mb-2 flex items-center justify-between">
+          <span class="rounded-full bg-brand-100 px-2 py-0.5 text-xs font-medium text-brand-700 capitalize">
+            {{ outfit.occasion }}
+          </span>
+          <span class="text-xs text-brand-400">{{ new Date(outfit.createdAt).toLocaleDateString() }}</span>
+        </div>
+        <p class="text-sm text-brand-600 italic">{{ outfit.explanation }}</p>
+      </div>
     </div>
   </div>
 </template>
