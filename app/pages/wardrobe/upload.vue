@@ -119,6 +119,12 @@ async function onFilesSelected() {
   uploadItems.value = [...uploadItems.value, ...items]
   uploadKey.value++
   await nextTick()
+
+  // Auto-analyze new items immediately
+  const newPending = items.filter(i => i.status === 'pending')
+  if (newPending.length > 0) {
+    await analyzeItems()
+  }
 }
 
 const hasPendingItems = computed(() =>
