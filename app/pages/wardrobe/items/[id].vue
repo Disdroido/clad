@@ -64,13 +64,21 @@ async function save() {
   }
 }
 
-async function remove() {
-  if (!item.value || !confirm('Remove this item from your wardrobe?')) return
+const archiving = ref(false)
+
+async function archiveItem() {
+  if (!item.value || !confirm('Archive this item? You can restore it from Settings.')) return
+  archiving.value = true
   try {
-    await $fetch(`/api/wardrobe/items/${id}`, { method: 'DELETE' })
+    await $fetch(`/api/wardrobe/items/${id}/archive`, {
+      method: 'PATCH',
+      body: { isArchived: true },
+    })
     router.push('/wardrobe')
   } catch {
-    error.value = 'Failed to delete item'
+    error.value = 'Failed to archive item'
+  } finally {
+    archiving.value = false
   }
 }
 </script>
@@ -176,10 +184,11 @@ async function remove() {
           {{ saving ? 'Saving...' : saved ? 'Saved!' : 'Save Changes' }}
         </button>
         <button
-          @click="remove"
-          class="rounded-lg border border-red-200 px-6 py-3 text-red-500 hover:bg-red-50 transition"
+          @click="archiveItem"
+          :disabled="archiving"
+          class="rounded-lg border border-red-200 px-6 py-3 text-red-500 hover:bg-red-50 transition disabled:opacity-50"
         >
-          Delete
+          {{ archiving ? 'Archiving...' : 'Archive' }}
         </button>
       </div>
     </div>

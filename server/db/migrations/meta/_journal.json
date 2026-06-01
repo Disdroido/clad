@@ -15,6 +15,13 @@
       "when": 1780274400000,
       "tag": "0001_add_clothing_sub_type",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1780280718795,
+      "tag": "0002_lovely_nighthawk",
+      "breakpoints": true
     }
   ]
 }

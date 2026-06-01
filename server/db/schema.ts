@@ -125,6 +125,7 @@ export const wardrobeItems = pgTable('wardrobe_items', {
   isFavorite: boolean('is_favorite').default(false),
   aiConfidence: real('ai_confidence'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
+  isArchived: boolean('is_archived').default(false).notNull(),
 })
 
 export const outfits = pgTable('outfits', {
@@ -139,4 +140,5 @@ export const outfits = pgTable('outfits', {
   rating: real('rating'),
   wornDates: jsonb('worn_dates').$type<string[]>(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
+  isArchived: boolean('is_archived').default(false).notNull(),
 })

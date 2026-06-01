@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
   const items = await db
     .select()
     .from(wardrobeItems)
-    .where(and(eq(wardrobeItems.isArchived, false), eq(wardrobeItems.userId, userId)))
+    .where(and(eq(wardrobeItems.isArchived, true), eq(wardrobeItems.userId, userId)))
     .orderBy(desc(wardrobeItems.createdAt))
 
   return { items }

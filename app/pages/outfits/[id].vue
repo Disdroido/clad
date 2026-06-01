@@ -4,6 +4,7 @@ const router = useRouter()
 
 const outfit = ref<any>(null)
 const loading = ref(true)
+const archiving = ref(false)
 
 definePageMeta({ layout: 'default' })
 useHead({ title: 'Outfit — Clad' })
@@ -18,6 +19,23 @@ async function fetchOutfit() {
     router.push('/outfits')
   } finally {
     loading.value = false
+  }
+}
+
+async function archiveOutfit() {
+  if (!confirm('Archive this outfit? You can restore it from Settings.')) return
+  archiving.value = true
+  try {
+    await $fetch(`/api/outfits/${route.params.id}/archive`, {
+      method: 'PATCH',
+      body: { isArchived: true },
+    })
+    router.push('/outfits')
+  } catch (err: any) {
+    const msg = err?.data?.message || err?.message || 'Failed to archive outfit'
+    alert(msg)
+  } finally {
+    archiving.value = false
   }
 }
 
@@ -57,6 +75,14 @@ onMounted(fetchOutfit)
           </div>
         </div>
       </div>
+
+      <button
+        @click="archiveOutfit"
+        :disabled="archiving"
+        class="mt-6 w-full rounded-lg border border-red-200 py-3 text-sm font-medium text-red-500 hover:bg-red-50 transition disabled:opacity-50"
+      >
+        {{ archiving ? 'Archiving...' : 'Archive Outfit' }}
+      </button>
     </div>
   </div>
 </template>

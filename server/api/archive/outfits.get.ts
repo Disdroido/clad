@@ -10,12 +10,11 @@ export default defineEventHandler(async (event) => {
   const rows = await db
     .select()
     .from(outfits)
-    .where(and(eq(outfits.isArchived, false), eq(outfits.userId, userId)))
+    .where(and(eq(outfits.isArchived, true), eq(outfits.userId, userId)))
     .orderBy(desc(outfits.createdAt))
 
   const allItemIds = [...new Set(rows.flatMap(o => o.itemIds ?? []))]
-
-  let itemsMap: Record<string, typeof wardrobeItems.$inferSelect> = {}
+  let itemsMap: Record<string, any> = {}
   if (allItemIds.length > 0) {
     const items = await db
       .select()

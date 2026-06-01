@@ -23,6 +23,14 @@ async function signOut() {
     </div>
 
     <div class="space-y-4">
+      <NuxtLink to="/settings/archive" class="flex items-center justify-between rounded-lg bg-white p-4 shadow hover:shadow-md transition">
+        <div>
+          <p class="font-medium text-brand-900">Archive</p>
+          <p class="text-sm text-brand-500">View and manage archived outfits and clothing</p>
+        </div>
+        <span class="text-brand-400">→</span>
+      </NuxtLink>
+
       <NuxtLink to="/onboarding" class="flex items-center justify-between rounded-lg bg-white p-4 shadow hover:shadow-md transition">
         <div>
           <p class="font-medium text-brand-900">Edit Profile</p>
