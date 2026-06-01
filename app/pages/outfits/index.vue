@@ -50,10 +50,11 @@ onMounted(fetchOutfits)
     </div>
 
     <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      <div
+      <NuxtLink
         v-for="outfit in outfits"
         :key="outfit.id"
-        class="rounded-xl bg-white p-4 shadow-sm border border-brand-100"
+        :to="`/outfits/${outfit.id}`"
+        class="block rounded-xl bg-white p-4 shadow-sm border border-brand-100 hover:shadow-md transition"
       >
         <div class="mb-3 flex items-center justify-between">
           <span class="rounded-full bg-brand-100 px-2 py-0.5 text-xs font-medium text-brand-700 capitalize">
@@ -73,7 +74,7 @@ onMounted(fetchOutfits)
         </div>
 
         <p class="text-sm text-brand-600 italic">{{ outfit.explanation }}</p>
-      </div>
+      </NuxtLink>
     </div>
   </div>
 </template>

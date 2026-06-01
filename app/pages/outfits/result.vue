@@ -10,7 +10,6 @@ const occasion = ref(route.query.occasion as string || '')
 const outfitResult = ref<any>(null)
 const loading = ref(true)
 const saving = ref(false)
-const saved = ref(false)
 
 async function generateOutfit() {
   loading.value = true
@@ -40,7 +39,7 @@ async function saveOutfit() {
 
   saving.value = true
   try {
-    await $fetch('/api/outfits', {
+    const saved = await $fetch('/api/outfits', {
       method: 'POST',
       body: {
         occasion,
@@ -48,8 +47,7 @@ async function saveOutfit() {
         itemIds: items.map((i: any) => i.id),
       },
     })
-    saved.value = true
-    setTimeout(() => { saved.value = false }, 2000)
+    router.push(`/outfits/${saved.id}`)
   } catch (err: any) {
     const msg = err?.data?.message || err?.message || 'Failed to save outfit'
     alert(msg)
@@ -114,7 +112,7 @@ onMounted(() => {
           :disabled="saving"
           class="flex-1 rounded-lg bg-brand-600 py-3 font-medium text-white hover:bg-brand-700 transition disabled:opacity-50"
         >
-          {{ saving ? 'Saving...' : saved ? '✅ Saved!' : '💾 Save Outfit' }}
+          {{ saving ? 'Saving...' : '💾 Save Outfit' }}
         </button>
       </div>
     </div>
