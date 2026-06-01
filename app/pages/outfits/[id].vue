@@ -10,6 +10,11 @@ const wearSuccess = ref(false)
 const userRating = ref<number>(0)
 const savingRating = ref(false)
 
+// Share state
+const sharing = ref(false)
+const shareUrl = ref('')
+const shareCopied = ref(false)
+
 // Schedule state
 const scheduledOutfit = ref<any>(null)
 const showScheduleModal = ref(false)
@@ -116,6 +121,25 @@ async function scheduleFromDetail() {
     scheduleError.value = err?.data?.message || 'Couldn\'t schedule outfit. Please try again.'
   } finally {
     scheduleSaving.value = false
+  }
+}
+
+async function shareOutfit() {
+  sharing.value = true
+  shareCopied.value = false
+  try {
+    const result: any = await $fetch('/api/share', {
+      method: 'POST',
+      body: { outfitId: route.params.id },
+    })
+    shareUrl.value = result.shareUrl
+    await navigator.clipboard.writeText(result.shareUrl)
+    shareCopied.value = true
+    setTimeout(() => { shareCopied.value = false }, 2000)
+  } catch (err: any) {
+    alert(err?.data?.message || 'Failed to share outfit')
+  } finally {
+    sharing.value = false
   }
 }
 
@@ -246,10 +270,21 @@ onMounted(() => {
         </div>
       </Teleport>
 
+      <!-- Share button -->
+      <div class="mb-4 mt-6">
+        <button
+          @click="shareOutfit"
+          :disabled="sharing"
+          class="w-full rounded-lg bg-brand-600 py-3 font-medium text-white hover:bg-brand-700 transition disabled:opacity-50"
+        >
+          {{ sharing ? 'Sharing...' : shareCopied ? '✅ Link Copied!' : '🔗 Share Outfit' }}
+        </button>
+      </div>
+
       <button
         @click="archiveOutfit"
         :disabled="archiving"
-        class="mt-6 w-full rounded-lg border border-red-200 py-3 text-sm font-medium text-red-500 hover:bg-red-50 transition disabled:opacity-50"
+        class="w-full rounded-lg border border-red-200 py-3 text-sm font-medium text-red-500 hover:bg-red-50 transition disabled:opacity-50"
       >
         {{ archiving ? 'Archiving...' : 'Archive Outfit' }}
       </button>

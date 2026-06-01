@@ -6,6 +6,8 @@ const navItems = [
   { label: 'Outfits', to: '/outfits', icon: '✨' },
   { label: 'Calendar', to: '/calendar', icon: '📅' },
   { label: 'Trips', to: '/trips', icon: '✈️' },
+  { label: 'Discover', to: '/discover', icon: '🌍' },
+  { label: 'Inspiration', to: '/inspiration', icon: '💡' },
   { label: 'What I Wore', to: '/outfits/wear-history', icon: '📅' },
   { label: 'Insights', to: '/insights', icon: '📊' },
   { label: 'Settings', to: '/settings', icon: '⚙️' },
