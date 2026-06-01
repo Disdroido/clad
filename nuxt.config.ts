@@ -60,6 +60,7 @@ export default defineNuxtConfig({
     r2BucketName: process.env.R2_BUCKET_NAME,
     r2PublicUrl: process.env.R2_PUBLIC_URL,
     authSecret: process.env.AUTH_SECRET,
+    weatherApiKey: process.env.WEATHER_API_KEY,
     // Public (exposed to client)
     public: {
       appUrl: process.env.PUBLIC_APP_URL || 'http://localhost:3000',

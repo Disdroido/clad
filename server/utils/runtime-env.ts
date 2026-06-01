@@ -74,6 +74,10 @@ export function getServerEnv(event?: H3Event) {
     env('NUXT_OPENROUTER_API_KEY', 'OPENROUTER_API_KEY')
     || (config.openrouterApiKey as string | undefined)
 
+  const weatherApiKey =
+    env('NUXT_WEATHER_API_KEY', 'WEATHER_API_KEY')
+    || (config.weatherApiKey as string | undefined)
+
   const r2AccountId =
     env('NUXT_R2_ACCOUNT_ID', 'R2_ACCOUNT_ID')
     || (config.r2AccountId as string | undefined)
@@ -95,6 +99,7 @@ export function getServerEnv(event?: H3Event) {
     authSecret,
     neonDatabaseUrl,
     openrouterApiKey,
+    weatherApiKey,
     r2AccountId,
     r2ApiToken,
     r2BucketName,
