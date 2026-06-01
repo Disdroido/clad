@@ -19,6 +19,7 @@ export interface UserProfile {
   stylePreferences?: string[]
   climate?: string
   recentlyWornItemIds?: string[]  // item IDs worn in the last 7 days
+  currentTemperature?: number     // °F from weather API (feels-like temp)
 }
 
 // Colour wheel for harmony checks
@@ -175,6 +176,37 @@ export function generateValidOutfits(items: Item[], profile: UserProfile, occasi
       }
     }
 
+    // Temperature-based scoring bonus (D-03 per CONTEXT.md)
+    // Uses feels-like temperature. Scoring modifier, not hard filter.
+    if (profile.currentTemperature !== undefined) {
+      const temp = profile.currentTemperature
+
+      if (temp < 50) {
+        // Cold: boost warm layers, penalize light clothing
+        for (const item of base) {
+          if (['coat', 'jacket', 'sweater', 'hoodie'].includes(item.clothingType)) {
+            score += 3
+          }
+          if (['shorts', 't-shirt'].includes(item.clothingType)) {
+            score -= 3
+          }
+        }
+      } else if (temp > 70) {
+        // Warm: boost light fabrics, penalize heavy layers
+        for (const item of base) {
+          if (['t-shirt', 'shorts', 'skirt'].includes(item.clothingType)) {
+            score += 3
+          }
+          if (['coat', 'sweater', 'hoodie'].includes(item.clothingType)) {
+            score -= 3
+          }
+        }
+      } else {
+        // Mild (50-70°F): small flexibility bonus for all items
+        score += 1
+      }
+    }
+
     // Add optional outerwear that matches
     for (const ow of outerwear) {
       if (baseColours.every(c => areColoursHarmonious(c, ow.colour))) {
@@ -186,6 +218,16 @@ export function generateValidOutfits(items: Item[], profile: UserProfile, occasi
           // Penalize recently worn outerwear
           if (profile.recentlyWornItemIds?.includes(ow.id)) {
             comboScore -= 5
+          }
+
+          // Temperature scoring for outerwear
+          if (profile.currentTemperature !== undefined) {
+            const temp = profile.currentTemperature
+            if (temp < 50 && ['coat', 'jacket', 'sweater', 'hoodie'].includes(ow.clothingType)) {
+              comboScore += 3  // bonus for warm outerwear in cold
+            } else if (temp > 70 && ['coat', 'sweater', 'hoodie'].includes(ow.clothingType)) {
+              comboScore -= 3  // penalty for heavy outerwear in heat
+            }
           }
 
           // Add shoes
