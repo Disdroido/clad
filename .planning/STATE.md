@@ -4,7 +4,7 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 03
 status: Executing Phase 03
-last_updated: "2026-06-01T03:55:55.344Z"
+last_updated: "2026-06-01T03:56:00Z"
 progress:
   total_phases: 8
   completed_phases: 1
@@ -25,9 +25,10 @@ progress:
   - [x] 02-01-PLAN.md — Wear tracking schema and API ✅
   - [x] 02-02-PLAN.md — Wear tracking UI and outfit rating ✅
   - [x] 02-03-PLAN.md — Smart generation with wear recency ✅
-- Phase 03: 🚧 In Progress (2/3 plans complete)
+- Phase 03: 🚧 In Progress (3/3 plans complete)
   - [x] 03-01-PLAN.md — Weather API integration and data model ✅
   - [x] 03-02-PLAN.md — Temperature-aware outfit scoring ✅
+  - [x] 03-03-PLAN.md — Weather display in UI ✅
 - Phases 04-08: 🔮 Defined in roadmap
 
 ## Decisions
@@ -47,6 +48,9 @@ progress:
 - [Phase 03-weather-integration]: IP fallback passes explicit x-forwarded-for header (not auto:ip) to avoid CF datacenter resolution
 - [Phase 03-weather-integration]: Weather failure never blocks generation — graceful fallback matches D-05 pattern
 - [Phase 03-weather-integration]: Temperature scoring uses ±3 bonus/penalty (lower than wear recency -5) so preferences still dominate ranking
+- [Phase 03-weather-integration]: Geolocation uses enableHighAccuracy: false for battery savings, cache-first strategy, 30-min TTL
+- [Phase 03-weather-integration]: No toast library added — inline amber banner for fallback notification avoids npm dependency
+- [Phase 03-weather-integration]: Coords passed via URL query params between pages — simpler than store or session
 
 ## Blockers
 
