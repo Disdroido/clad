@@ -2,6 +2,8 @@
 import { ref, computed, watch } from 'vue'
 import { useFileDialog, useObjectUrl } from '@vueuse/core'
 
+const router = useRouter()
+
 definePageMeta({
   layout: 'default'
 })
@@ -160,6 +162,7 @@ async function saveToWardrobe() {
   }
 
   processing.value = false
+  router.push('/wardrobe')
 }
 
 async function handlePrimaryAction() {
