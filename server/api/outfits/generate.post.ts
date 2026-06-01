@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
   const userId = await requireUserId(event)
 
   const body = await readBody(event)
-  const { occasion } = body
+  const { occasion, skipLaundry } = body
   const lat = body.lat as number | undefined
   const lon = body.lon as number | undefined
 
@@ -97,7 +97,12 @@ export default defineEventHandler(async (event) => {
   }
 
   // 3. Stage 1: Deterministic pre-filter
-  const candidates = generateValidOutfits(items, enrichedProfile, occasion)
+  const candidates = generateValidOutfits(
+    items,
+    enrichedProfile,
+    occasion,
+    !skipLaundry   // invert: skipLaundry=false → skipDirty=true (default behavior)
+  )
 
   if (candidates.length === 0) {
     throw createError({

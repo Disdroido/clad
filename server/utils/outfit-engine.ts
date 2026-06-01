@@ -10,6 +10,8 @@ export interface Item {
   formalityLevel: string
   season: string
   imageUrl: string
+  isClean?: boolean     // from wardrobeItems.isClean — skipDirty filter uses this
+  condition?: string    // from wardrobeItems.condition — scoring penalty uses this
 }
 
 export interface UserProfile {
@@ -93,7 +95,12 @@ function matchesSeason(itemSeason: string, currentSeason: string): boolean {
   return itemSeason === 'all_season' || itemSeason === currentSeason
 }
 
-export function generateValidOutfits(items: Item[], profile: UserProfile, occasion: string) {
+export function generateValidOutfits(
+  items: Item[],
+  profile: UserProfile,
+  occasion: string,
+  skipDirty: boolean = true   // skip dirty items by default (per D-04)
+) {
   const currentSeason = getCurrentSeason()
   
   // Step 1: Filter by season and formality
@@ -101,6 +108,11 @@ export function generateValidOutfits(items: Item[], profile: UserProfile, occasi
     matchesSeason(item.season, currentSeason) &&
     isInFormalityRange(item.formalityLevel, occasion)
   )
+
+  // Step 1.5: Filter out dirty items (unless overridden)
+  if (skipDirty) {
+    filtered = filtered.filter(item => item.isClean !== false)
+  }
 
   // Step 2: Filter out disliked colours
   if (profile.dislikedColours?.length) {
@@ -176,6 +188,17 @@ export function generateValidOutfits(items: Item[], profile: UserProfile, occasi
       }
     }
 
+    // Condition penalty: deprioritize worn or damaged items (per D-08)
+    for (const item of base) {
+      if (item.condition === 'worn') {
+        score -= 2
+      } else if (item.condition === 'needs_repair') {
+        score -= 2
+      } else if (item.condition === 'new') {
+        score += 1
+      }
+    }
+
     // Temperature-based scoring bonus (D-03 per CONTEXT.md)
     // Uses feels-like temperature. Scoring modifier, not hard filter.
     if (profile.currentTemperature !== undefined) {
@@ -218,6 +241,13 @@ export function generateValidOutfits(items: Item[], profile: UserProfile, occasi
           // Penalize recently worn outerwear
           if (profile.recentlyWornItemIds?.includes(ow.id)) {
             comboScore -= 5
+          }
+
+          // Condition penalty for outerwear
+          if (ow.condition === 'worn' || ow.condition === 'needs_repair') {
+            comboScore -= 2
+          } else if (ow.condition === 'new') {
+            comboScore += 1
           }
 
           // Temperature scoring for outerwear
