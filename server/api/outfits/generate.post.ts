@@ -1,7 +1,7 @@
-import { eq } from 'drizzle-orm'
+import { eq, and, gte, inArray } from 'drizzle-orm'
 import { generateValidOutfits } from '../../utils/outfit-engine'
 import { generateOutfitReasoning } from '../../utils/openrouter'
-import { wardrobeItems, profiles } from '../../db/schema'
+import { wardrobeItems, profiles, outfits, outfitWearEvents } from '../../db/schema'
 import { useDb } from '../../db'
 import { requireUserId } from '../../utils/session'
 
@@ -37,8 +37,45 @@ export default defineEventHandler(async (event) => {
     .where(eq(profiles.userId, userId))
     .limit(1)
 
+  // 2.5. Fetch recently worn items (last 7 days)
+  let recentlyWornItemIds: string[] = []
+  try {
+    const sevenDaysAgo = new Date()
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+
+    const recentWearEvents = await db
+      .select()
+      .from(outfitWearEvents)
+      .where(
+        and(
+          eq(outfitWearEvents.userId, userId),
+          gte(outfitWearEvents.wornDate, sevenDaysAgo),
+        )
+      )
+
+    const recentOutfitIds = [...new Set(recentWearEvents.map(e => e.outfitId))]
+
+    if (recentOutfitIds.length > 0) {
+      const recentOutfits = await db
+        .select()
+        .from(outfits)
+        .where(inArray(outfits.id, recentOutfitIds))
+
+      recentlyWornItemIds = [
+        ...new Set(recentOutfits.flatMap(o => (o.itemIds as string[]) || []))
+      ]
+    }
+  } catch {
+    // Wear history not available, proceed without recency data
+  }
+
+  const enrichedProfile = {
+    ...(profile || {}),
+    recentlyWornItemIds,
+  }
+
   // 3. Stage 1: Deterministic pre-filter
-  const candidates = generateValidOutfits(items, profile || {}, occasion)
+  const candidates = generateValidOutfits(items, enrichedProfile, occasion)
 
   if (candidates.length === 0) {
     throw createError({
