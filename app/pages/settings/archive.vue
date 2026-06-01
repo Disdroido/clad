@@ -27,7 +27,11 @@ async function fetchArchived() {
 
 function toggle(id: string) {
   const next = new Set(selected.value)
-  if (next.has(id)) next.delete(id) else next.add(id)
+  if (next.has(id)) {
+    next.delete(id)
+  } else {
+    next.add(id)
+  }
   selected.value = next
 }
 
@@ -68,7 +72,7 @@ async function deleteSelected() {
   try {
     await $fetch(endpoint, {
       method: 'DELETE',
-      body: { ids: Array.from(selected.value) },
+      body: { ids: Array.from(selected.value) }
     })
   } catch { /* ignore */ }
 
