@@ -85,7 +85,7 @@ async function remove() {
     <NuxtLink to="/wardrobe" class="text-brand-600 underline">Back to Wardrobe</NuxtLink>
   </div>
 
-  <div v-else-if="item" class="mx-auto max-w-3xl">
+  <div v-else-if="item">
     <div class="mb-4">
       <NuxtLink to="/wardrobe" class="text-sm text-brand-400 hover:text-brand-600">&larr; Back to Wardrobe</NuxtLink>
     </div>

@@ -66,7 +66,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="mx-auto max-w-4xl">
+  <div>
     <div class="mb-4 flex items-center gap-2">
       <NuxtLink to="/outfits/generate" class="text-sm text-brand-400 hover:text-brand-600">&larr; Pick Different Occasion</NuxtLink>
     </div>

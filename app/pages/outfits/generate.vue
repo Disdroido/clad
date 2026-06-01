@@ -26,7 +26,7 @@ function generateOutfit() {
 </script>
 
 <template>
-  <div class="max-w-2xl mx-auto">
+  <div>
     <h1 class="text-2xl font-bold text-brand-950 mb-2">Pick My Outfit</h1>
     <p class="text-brand-500 mb-6">What's the occasion?</p>
 

@@ -181,7 +181,7 @@ watch(files, onFilesSelected)
 </script>
 
 <template>
-  <div class="max-w-2xl mx-auto">
+  <div>
     <h1 class="text-2xl font-bold text-brand-950 mb-6">Add Clothing</h1>
 
     <!-- Upload area -->

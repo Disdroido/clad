@@ -119,7 +119,7 @@ async function finish() {
 </script>
 
 <template>
-  <div class="mx-auto max-w-lg">
+    <div class="mx-auto max-w-lg lg:max-w-2xl">
     <!-- Progress -->
     <div class="mb-8">
       <div class="flex justify-between text-sm text-brand-500 mb-2">

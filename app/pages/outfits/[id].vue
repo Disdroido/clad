@@ -25,7 +25,7 @@ onMounted(fetchOutfit)
 </script>
 
 <template>
-  <div class="mx-auto max-w-4xl">
+  <div>
     <div class="mb-4 flex items-center gap-2">
       <NuxtLink to="/outfits" class="text-sm text-brand-400 hover:text-brand-600">&larr; All Outfits</NuxtLink>
     </div>
