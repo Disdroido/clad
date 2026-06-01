@@ -184,3 +184,65 @@ export const trips = pgTable('trips', {
   purpose: varchar('purpose', { length: 100 }).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })
+
+// ----------------------------------------------------------------------------
+// Social & Sharing tables (Phase 06)
+// ----------------------------------------------------------------------------
+
+export const sharedOutfits = pgTable('shared_outfits', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  outfitId: uuid('outfit_id')
+    .notNull()
+    .references(() => outfits.id, { onDelete: 'cascade' }),
+  shortId: text('short_id').notNull().unique(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
+export const publicProfiles = pgTable('public_profiles', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  username: text('username').notNull().unique(),
+  displayName: text('display_name').notNull(),
+  bio: text('bio'),
+  isPublic: boolean('is_public').default(false).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+})
+
+export const likes = pgTable('likes', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  outfitId: uuid('outfit_id')
+    .notNull()
+    .references(() => sharedOutfits.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
+export const follows = pgTable('follows', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  followerId: text('follower_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  followingId: uuid('following_id')
+    .notNull()
+    .references(() => publicProfiles.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
+export const saves = pgTable('saves', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  outfitId: uuid('outfit_id')
+    .notNull()
+    .references(() => sharedOutfits.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})

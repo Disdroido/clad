@@ -21,3 +21,14 @@ export async function requireUserId(event: H3Event): Promise<string> {
   }
   return session.user.id
 }
+
+/**
+ * Returns the user ID if a session exists, or null if unauthenticated.
+ * Does NOT throw 401 — use this for public pages that want to attach
+ * user context (e.g., "has this anonymous viewer liked this outfit?")
+ * without blocking unauthenticated access.
+ */
+export async function getOptionalUserId(event: H3Event): Promise<string | null> {
+  const session = await getServerSession(event).catch(() => null)
+  return session?.user?.id ?? null
+}
