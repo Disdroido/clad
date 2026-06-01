@@ -13,3 +13,20 @@
   --color-brand-900: #523223;
   --color-brand-950: #2e1a11;
 }
+
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: opacity 0.2s ease;
+}
+.slide-up-enter-active .panel,
+.slide-up-leave-active .panel {
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.slide-up-enter-from,
+.slide-up-leave-to {
+  opacity: 0;
+}
+.slide-up-enter-from .panel,
+.slide-up-leave-to .panel {
+  transform: translateY(100%);
+}

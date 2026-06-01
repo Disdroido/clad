@@ -226,8 +226,9 @@ const hasData = computed(() => data.value?.composition?.length)
         </div>
         <!-- Ranked list below chart -->
         <div v-if="data.mostWorn?.length" class="mt-4 space-y-2">
-          <div v-for="(item, idx) in data.mostWorn.slice(0, 10)" :key="item.id"
-               class="flex items-center gap-3 rounded-lg bg-brand-50 p-2">
+          <NuxtLink v-for="(item, idx) in data.mostWorn.slice(0, 10)" :key="item.id"
+            :to="`/wardrobe/items/${item.id}`"
+            class="flex items-center gap-3 rounded-lg bg-brand-50 p-2 hover:bg-brand-100 transition">
             <span class="w-6 text-center text-sm font-bold text-brand-400">#{{ idx + 1 }}</span>
             <img :src="item.imageUrl" :alt="item.clothingType"
                  class="h-10 w-10 rounded-md border border-brand-200 object-cover" />
@@ -236,7 +237,7 @@ const hasData = computed(() => data.value?.composition?.length)
               <p class="text-xs text-brand-500">{{ item.colour }}</p>
             </div>
             <span class="text-sm font-semibold text-brand-700">{{ item.wearCount }}x</span>
-          </div>
+          </NuxtLink>
         </div>
       </section>
 

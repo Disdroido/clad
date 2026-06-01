@@ -130,6 +130,18 @@ async function deleteTrip() {
       <div class="rounded-xl border border-brand-100 bg-white p-6 shadow-sm">
         <h2 class="mb-3 text-base font-semibold text-brand-900">Scheduled Outfits</h2>
         <p class="text-sm text-brand-400">Outfits scheduled during this trip will appear here.</p>
+        <NuxtLink to="/calendar" class="mt-3 inline-block text-sm font-medium text-brand-600 hover:text-brand-700">
+          View Calendar &rarr;
+        </NuxtLink>
+      </div>
+
+      <!-- Related pages -->
+      <div class="mt-6 border-t border-brand-100 pt-4">
+        <p class="text-xs text-brand-400">
+          Related:
+          <NuxtLink to="/calendar" class="mx-1 font-medium text-brand-600 hover:text-brand-700">Calendar</NuxtLink>·
+          <NuxtLink to="/outfits" class="mx-1 font-medium text-brand-600 hover:text-brand-700">Outfits</NuxtLink>
+        </p>
       </div>
     </div>
   </div>

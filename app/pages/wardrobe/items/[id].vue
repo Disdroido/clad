@@ -36,6 +36,7 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
+  fetchItemOutfits()
 })
 
 async function save() {
@@ -65,6 +66,20 @@ async function save() {
 }
 
 const archiving = ref(false)
+const itemOutfits = ref<any[]>([])
+const loadingOutfits = ref(false)
+
+async function fetchItemOutfits() {
+  loadingOutfits.value = true
+  try {
+    const data: any = await $fetch(`/api/wardrobe/items/${id}/outfits`)
+    itemOutfits.value = data.outfits ?? []
+  } catch {
+    itemOutfits.value = []
+  } finally {
+    loadingOutfits.value = false
+  }
+}
 
 async function archiveItem() {
   if (!item.value || !confirm('Archive this item? You can restore it from Settings.')) return
@@ -190,6 +205,33 @@ async function archiveItem() {
         >
           {{ archiving ? 'Archiving...' : 'Archive' }}
         </button>
+      </div>
+
+      <div v-if="itemOutfits.length > 0" class="mt-6 border-t border-brand-100 pt-6">
+        <h3 class="mb-3 text-sm font-semibold text-brand-700">Outfits Using This Item</h3>
+        <div class="grid grid-cols-2 gap-3">
+          <NuxtLink
+            v-for="outfit in itemOutfits"
+            :key="outfit.id"
+            :to="`/outfits/${outfit.id}`"
+            class="rounded-lg border border-brand-100 bg-brand-50 p-3 hover:bg-brand-100 transition"
+          >
+            <span class="text-xs font-medium text-brand-600 capitalize">{{ outfit.occasion }}</span>
+            <p class="mt-1 text-xs text-brand-500 line-clamp-2">{{ outfit.explanation }}</p>
+          </NuxtLink>
+        </div>
+      </div>
+
+      <div v-if="loadingOutfits" class="mt-6 border-t border-brand-100 pt-6">
+        <span class="inline-block h-5 w-5 animate-spin rounded-full border-2 border-brand-200 border-t-brand-600" />
+      </div>
+
+      <div class="mt-6 border-t border-brand-100 pt-4">
+        <p class="text-xs text-brand-400">
+          Related:
+          <NuxtLink to="/outfits" class="mx-1 font-medium text-brand-600 hover:text-brand-700">Outfits</NuxtLink>·
+          <NuxtLink to="/calendar" class="mx-1 font-medium text-brand-600 hover:text-brand-700">Calendar</NuxtLink>
+        </p>
       </div>
     </div>
     </div>

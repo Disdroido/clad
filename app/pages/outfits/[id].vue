@@ -182,17 +182,18 @@ onMounted(() => {
       </div>
 
       <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-        <div
+        <NuxtLink
           v-for="item in outfit.items"
           :key="item.id"
-          class="overflow-hidden rounded-lg border border-brand-100"
+          :to="`/wardrobe/items/${item.id}`"
+          class="overflow-hidden rounded-lg border border-brand-100 hover:shadow-md transition"
         >
           <img :src="item.imageUrl" :alt="item.clothingType" class="aspect-square w-full object-cover" />
           <div class="p-2 text-center">
             <p class="text-sm font-medium text-brand-900 capitalize">{{ item.clothingType }}</p>
             <p class="text-xs text-brand-500">{{ item.colour }}</p>
           </div>
-        </div>
+        </NuxtLink>
       </div>
 
       <div class="flex gap-3 mb-4">
@@ -279,6 +280,16 @@ onMounted(() => {
         >
           {{ sharing ? 'Sharing...' : shareCopied ? '✅ Link Copied!' : '🔗 Share Outfit' }}
         </button>
+      </div>
+
+      <!-- Related pages -->
+      <div class="mt-6 border-t border-brand-100 pt-4">
+        <p class="text-xs text-brand-400">
+          Related:
+          <NuxtLink to="/wardrobe" class="mx-1 font-medium text-brand-600 hover:text-brand-700">Wardrobe</NuxtLink>·
+          <NuxtLink to="/calendar" class="mx-1 font-medium text-brand-600 hover:text-brand-700">Calendar</NuxtLink>·
+          <NuxtLink to="/discover" class="mx-1 font-medium text-brand-600 hover:text-brand-700">Discover</NuxtLink>
+        </p>
       </div>
 
       <button
