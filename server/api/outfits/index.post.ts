@@ -9,12 +9,9 @@ export default defineEventHandler(async (event) => {
   const body = await readBody(event)
   const { itemIds, explanation, occasion } = body ?? {}
 
-  if (!itemIds?.length || !explanation || !occasion) {
-    throw createError({
-      statusCode: 400,
-      message: 'itemIds, explanation and occasion are required',
-    })
-  }
+  if (!itemIds?.length) throw createError({ statusCode: 400, message: 'No items in outfit' })
+  if (!explanation) throw createError({ statusCode: 400, message: 'Missing outfit explanation' })
+  if (!occasion) throw createError({ statusCode: 400, message: 'Missing occasion' })
 
   const [saved] = await db
     .insert(outfits)

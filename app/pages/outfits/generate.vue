@@ -18,25 +18,10 @@ const occasions = [
 ]
 
 const selectedOccasion = ref<string | null>(null)
-const generating = ref(false)
 
-async function generateOutfit() {
+function generateOutfit() {
   if (!selectedOccasion.value) return
-
-  generating.value = true
-
-  try {
-    await $fetch('/api/outfits/generate', {
-      method: 'POST',
-      body: { occasion: selectedOccasion.value },
-    })
-    router.push(`/outfits/result?occasion=${selectedOccasion.value}`)
-  } catch (err: any) {
-    const msg = err?.data?.message || err?.message || 'Failed to generate outfit'
-    alert(msg)
-  } finally {
-    generating.value = false
-  }
+  router.push(`/outfits/result?occasion=${selectedOccasion.value}`)
 }
 </script>
 
@@ -67,16 +52,10 @@ async function generateOutfit() {
     <!-- Generate button -->
     <button
       @click="generateOutfit"
-      :disabled="!selectedOccasion || generating"
+      :disabled="!selectedOccasion"
       class="w-full rounded-lg bg-brand-600 py-4 text-lg font-medium text-white hover:bg-brand-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
     >
-      <span v-if="generating" class="flex items-center justify-center gap-2">
-        <span class="inline-block h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-        AI is picking your outfit...
-      </span>
-      <span v-else>
-        ✨ Pick My Outfit
-      </span>
+      ✨ Pick My Outfit
     </button>
 
   </div>
