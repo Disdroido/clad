@@ -4,12 +4,17 @@ import { generateOutfitReasoning } from '../../utils/openrouter'
 import { wardrobeItems, profiles, outfits, outfitWearEvents } from '../../db/schema'
 import { useDb } from '../../db'
 import { requireUserId } from '../../utils/session'
+import { getRequestHeader } from 'h3'
+import { fetchCurrentWeather, fetchWeatherByIp } from '../../utils/weather'
+import type { WeatherData } from '../../utils/weather'
 
 export default defineEventHandler(async (event) => {
   const userId = await requireUserId(event)
 
   const body = await readBody(event)
   const { occasion } = body
+  const lat = body.lat as number | undefined
+  const lon = body.lon as number | undefined
 
   if (!occasion) {
     throw createError({ statusCode: 400, message: 'occasion is required' })
@@ -69,9 +74,26 @@ export default defineEventHandler(async (event) => {
     // Wear history not available, proceed without recency data
   }
 
+  // 2.7. Fetch weather data (graceful fallback per D-05)
+  let weatherResult: WeatherData | null = null
+  try {
+    const clientIp = getRequestHeader(event, 'x-forwarded-for')?.split(',')[0]?.trim()
+    if (lat && lon) {
+      weatherResult = await fetchCurrentWeather(lat, lon, event)
+    } else if (clientIp) {
+      // Per research Pitfall 4: pass explicit user IP, not auto:ip
+      // auto:ip on Cloudflare Workers resolves the datacenter, not the user
+      weatherResult = await fetchWeatherByIp(clientIp, event)
+    }
+  } catch {
+    // Weather unavailable — engine falls back to climate zone
+  }
+
   const enrichedProfile = {
     ...(profile || {}),
     recentlyWornItemIds,
+    currentTemperature: weatherResult?.feelsLike ?? undefined,
+    // ^ use feelsLike for clothing decisions (per research: "feels-like > actual temp")
   }
 
   // 3. Stage 1: Deterministic pre-filter
@@ -109,5 +131,14 @@ export default defineEventHandler(async (event) => {
     items: candidates[outfitIndex],
     occasion,
     explanation,
+    weather: weatherResult ? {
+      temperature: weatherResult.temperature,
+      condition: weatherResult.condition,
+      iconUrl: weatherResult.iconUrl,
+      locationName: weatherResult.locationName,
+      feelsLike: weatherResult.feelsLike,
+    } : undefined,
+    weatherFallback: !weatherResult && !!(lat || lon),
+    // weatherFallback = true when user provided coords but weather API failed
   }
 })
