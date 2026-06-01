@@ -5,6 +5,10 @@ const router = useRouter()
 const outfit = ref<any>(null)
 const loading = ref(true)
 const archiving = ref(false)
+const wearing = ref(false)
+const wearSuccess = ref(false)
+const userRating = ref<number>(0)
+const savingRating = ref(false)
 
 definePageMeta({ layout: 'default' })
 useHead({ title: 'Outfit — Clad' })
@@ -13,6 +17,7 @@ async function fetchOutfit() {
   loading.value = true
   try {
     outfit.value = await $fetch(`/api/outfits/${route.params.id}`)
+    userRating.value = outfit.value?.rating || 0
   } catch (err: any) {
     const msg = err?.data?.message || err?.message || 'Failed to load outfit'
     alert(msg)
@@ -39,6 +44,32 @@ async function archiveOutfit() {
   }
 }
 
+async function logWear() {
+  wearing.value = true
+  wearSuccess.value = false
+  try {
+    await $fetch('/api/outfits/' + outfit.value.id + '/wear', { method: 'POST' })
+    wearSuccess.value = true
+    setTimeout(() => { wearSuccess.value = false }, 2000)
+    await fetchOutfit() // refresh to get updated wearCount
+  } catch { /* ignore */ }
+  finally { wearing.value = false }
+}
+
+async function setRating(rating: number) {
+  savingRating.value = true
+  userRating.value = rating // optimistic
+  try {
+    await $fetch('/api/outfits/' + outfit.value.id + '/rating', {
+      method: 'PATCH',
+      body: { rating }
+    })
+  } catch {
+    userRating.value = outfit.value?.rating || 0 // revert
+  }
+  finally { savingRating.value = false }
+}
+
 onMounted(fetchOutfit)
 </script>
 
@@ -62,6 +93,18 @@ onMounted(fetchOutfit)
 
       <p class="text-brand-600 italic mb-6">{{ outfit.explanation }}</p>
 
+      <div class="flex gap-4 text-sm text-brand-500 mb-4">
+        <span v-if="outfit.wearCount > 0">
+          👗 Worn {{ outfit.wearCount }} time{{ outfit.wearCount === 1 ? '' : 's' }}
+        </span>
+        <span v-if="outfit.lastWornAt">
+          Last worn {{ new Date(outfit.lastWornAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) }}
+        </span>
+        <span v-else-if="outfit.wearCount === 0 || outfit.wearCount === undefined">
+          Not worn yet
+        </span>
+      </div>
+
       <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
         <div
           v-for="item in outfit.items"
@@ -73,6 +116,31 @@ onMounted(fetchOutfit)
             <p class="text-sm font-medium text-brand-900 capitalize">{{ item.clothingType }}</p>
             <p class="text-xs text-brand-500">{{ item.colour }}</p>
           </div>
+        </div>
+      </div>
+
+      <div class="flex gap-3 mb-4">
+        <button
+          @click="logWear"
+          :disabled="wearing"
+          class="flex-1 rounded-lg bg-brand-600 py-3 font-medium text-white hover:bg-brand-700 transition disabled:opacity-50"
+        >
+          {{ wearing ? 'Logging...' : wearSuccess ? '✅ Logged!' : '👕 Log as Worn Today' }}
+        </button>
+      </div>
+
+      <div class="mb-6">
+        <p class="text-sm font-medium text-brand-700 mb-2">Rate this outfit</p>
+        <div class="flex gap-1">
+          <button
+            v-for="star in 5"
+            :key="star"
+            @click="setRating(star)"
+            :disabled="savingRating"
+            class="text-2xl transition hover:scale-110 disabled:opacity-50"
+          >
+            {{ (userRating >= star) ? '⭐' : '☆' }}
+          </button>
         </div>
       </div>
 
