@@ -14,28 +14,39 @@ export function getOpenRouterClient() {
   })
 }
 
-// Vision model (Gemini Flash for image analysis)
+// Vision model for clothing image analysis
 export async function analyzeClothingImage(imageUrl: string) {
   const client = getOpenRouterClient()
 
   const response = await client.chat.completions.create({
-    model: 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free', // cheap vision-capable model
+    model: 'google/gemini-2.0-flash-lite-001', // strong vision + json mode
     messages: [
       {
         role: 'user',
         content: [
           {
             type: 'text',
-            text: `Analyze this clothing item image and return a JSON object with these exact fields:
+            text: `Analyze the clothing item in this image. The item may be on any background — ignore the background completely.
+Focus ONLY on the clothing itself: its type, colour, pattern, material, formality, and season.
+
+IMPORTANT — Colour analysis rules:
+- Identify the TRUE colour of the clothing fabric, NOT the background colour.
+- If the background is a solid colour (e.g., teal, white, pink), it is NOT part of the clothing. Ignore it.
+- Consider lighting: bright light can wash out colours, shadows can darken them. Adjust for this.
+- Common colours to consider: black, white, navy, grey, brown, tan, beige, cream, red, pink, blue, light blue, green, olive, teal, yellow, orange, purple, lavender, burgundy, maroon, coral, denim, charcoal, silver, gold.
+- If the item is black, say "black" — do NOT guess brown/dark blue/grey unless the fabric is clearly not black.
+- Be specific but not overly precise: "navy blue" not "dark blue", "cream" not "off-white", "olive" not "greenish brown".
+
+Return a JSON object with these exact fields:
 {
   "clothing_type": "one of: t-shirt, shirt, blouse, sweater, hoodie, jacket, coat, jeans, trousers, shorts, skirt, dress, shoes, accessory, other",
-  "clothing_sub_type": "a specific subtype if known (e.g., henley, polo, button-down, crewneck, V-neck, bomber, blazer, cardigan, chinos, leggings, joggers, cargo, crop top, tank top, cami, flannel, denim jacket, puffer, windbreaker, trench coat, peacoat, hoodie, zip-up, quarter-zip, turtleneck, tube top, bodysuit, romper, jumpsuit, overalls, vest, waistcoat, sarong, kilt, mini skirt, midi skirt, maxi skirt, A-line, pencil skirt, pleated, wrap dress, shift dress, maxi dress, sundress, slip dress, sneakers, boots, loafers, sandals, heels, flats, oxfords, mules, slippers, or set to null if unsure)",
-  "colour": "the dominant colour name (e.g., navy blue, burgundy, cream, black, white)",
+  "clothing_sub_type": "specific subtype if identifiable (e.g., henley, polo, crewneck, V-neck, button-down, bomber, blazer, cardigan, chinos, joggers, tank top, flannel, denim jacket, puffer, windbreaker, trench coat, peacoat, hoodie, quarter-zip, turtleneck, bodysuit, romper, jumpsuit, vest, mini skirt, midi skirt, maxi skirt, A-line, pencil skirt, pleated, wrap dress, shift dress, maxi dress, sundress, slip dress, sneakers, boots, loafers, sandals, heels, flats, oxfords, mules) or null",
+  "colour": "the actual fabric colour of the clothing item",
   "pattern": "one of: solid, striped, checked, floral, graphic, abstract",
-  "material": "the apparent fabric material (e.g., cotton, denim, wool, silk, linen, polyester)",
+  "material": "apparent fabric material (e.g., cotton, denim, wool, silk, linen, polyester, leather, suede, knit, fleece, nylon, chiffon, velvet, corduroy, lace)",
   "formality_level": "one of: casual, smart_casual, business_casual, formal, black_tie",
   "season": "one of: spring, summer, autumn, winter, all_season",
-  "confidence": "a number from 0 to 1 how confident you are in this analysis"
+  "confidence": "number from 0 to 1"
 }
 Return ONLY the JSON object, no other text.`
           },
@@ -47,6 +58,7 @@ Return ONLY the JSON object, no other text.`
       }
     ],
     response_format: { type: 'json_object' },
+    max_tokens: 1000,
   })
 
   const content = response.choices[0]?.message?.content
@@ -64,7 +76,7 @@ export async function generateOutfitReasoning(
   const client = getOpenRouterClient()
 
   const response = await client.chat.completions.create({
-    model: 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free', // same model works fine for text too
+    model: 'google/gemini-2.0-flash-lite-001',
     messages: [
       {
         role: 'system',
