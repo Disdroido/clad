@@ -166,7 +166,6 @@ async function analyzeItems() {
   for (let i = 0; i < pending.length; i += BATCH_SIZE) {
     const batch = pending.slice(i, i + BATCH_SIZE)
     const doneSoFar = uploadItems.value.filter(i => i.status === 'done').length
-    const batchStart = doneSoFar + (i > 0 ? batch[0] && batch === pending.slice(i) ? i : i) : doneSoFar
 
     await Promise.all(batch.map(async (item) => {
       if (item.status !== 'pending' && item.status !== 'error') return
