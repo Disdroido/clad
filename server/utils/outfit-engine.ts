@@ -1,5 +1,6 @@
 // Stage 1: Deterministic pre-filter for outfit generation
 // Filters wardrobe items by season, formality, colour harmony, and pattern rules
+// Uses progressive relaxation when strict filtering produces too few candidates
 
 export interface Item {
   id: string
@@ -10,8 +11,8 @@ export interface Item {
   formalityLevel: string
   season: string
   imageUrl: string
-  isClean?: boolean     // from wardrobeItems.isClean — skipDirty filter uses this
-  condition?: string    // from wardrobeItems.condition — scoring penalty uses this
+  isClean?: boolean
+  condition?: string
 }
 
 export interface UserProfile {
@@ -20,30 +21,59 @@ export interface UserProfile {
   formalityDefault?: string
   stylePreferences?: string[]
   climate?: string
-  recentlyWornItemIds?: string[]  // item IDs worn in the last 7 days
-  currentTemperature?: number     // °F from weather API (feels-like temp)
+  recentlyWornItemIds?: string[]
+  currentTemperature?: number
 }
 
-// Colour wheel for harmony checks
+// Expanded colour wheel for harmony checks — covers common clothing colours
 const COLOUR_HARMONY: Record<string, string[]> = {
-  'black': ['white', 'red', 'blue', 'gold', 'silver', 'grey', 'navy', 'burgundy', 'cream', 'pink'],
-  'white': ['black', 'navy', 'red', 'blue', 'grey', 'brown', 'pink', 'green', 'yellow'],
-  'navy': ['white', 'cream', 'pink', 'burgundy', 'gold', 'grey', 'light blue', 'tan'],
-  'grey': ['black', 'white', 'navy', 'pink', 'yellow', 'red', 'blue'],
-  'brown': ['cream', 'tan', 'white', 'blue', 'green', 'burgundy', 'orange'],
-  'beige': ['navy', 'brown', 'white', 'olive', 'burgundy', 'black'],
-  'cream': ['navy', 'brown', 'black', 'burgundy', 'olive', 'grey'],
-  'red': ['black', 'white', 'grey', 'navy', 'cream'],
-  'blue': ['white', 'grey', 'tan', 'brown', 'cream', 'navy'],
-  'green': ['white', 'brown', 'cream', 'navy', 'tan', 'grey'],
-  'burgundy': ['navy', 'cream', 'black', 'grey', 'tan'],
-  'pink': ['grey', 'navy', 'white', 'black', 'cream']
+  'black':     ['white', 'red', 'blue', 'gold', 'silver', 'grey', 'navy', 'burgundy', 'cream', 'pink', 'green', 'yellow', 'olive', 'tan', 'teal'],
+  'white':     ['black', 'navy', 'red', 'blue', 'grey', 'brown', 'pink', 'green', 'yellow', 'tan', 'olive', 'teal', 'coral'],
+  'navy':      ['white', 'cream', 'pink', 'burgundy', 'gold', 'grey', 'light blue', 'tan', 'brown', 'olive', 'coral', 'yellow'],
+  'grey':      ['black', 'white', 'navy', 'pink', 'yellow', 'red', 'blue', 'green', 'burgundy', 'teal', 'lavender'],
+  'brown':     ['cream', 'tan', 'white', 'blue', 'green', 'burgundy', 'orange', 'olive', 'navy', 'yellow', 'coral'],
+  'beige':     ['navy', 'brown', 'white', 'olive', 'burgundy', 'black', 'tan', 'cream'],
+  'cream':     ['navy', 'brown', 'black', 'burgundy', 'olive', 'grey', 'tan', 'green'],
+  'tan':       ['navy', 'white', 'brown', 'cream', 'olive', 'burgundy', 'blue', 'green'],
+  'red':       ['black', 'white', 'grey', 'navy', 'cream', 'tan', 'denim'],
+  'blue':      ['white', 'grey', 'tan', 'brown', 'cream', 'navy', 'black', 'olive', 'yellow'],
+  'green':     ['white', 'brown', 'cream', 'navy', 'tan', 'grey', 'black', 'yellow', 'olive'],
+  'olive':     ['black', 'white', 'cream', 'tan', 'brown', 'navy', 'burgundy', 'grey'],
+  'burgundy':  ['navy', 'cream', 'black', 'grey', 'tan', 'white', 'olive', 'pink'],
+  'pink':      ['grey', 'navy', 'white', 'black', 'cream', 'tan', 'blue', 'burgundy'],
+  'yellow':    ['navy', 'grey', 'white', 'black', 'brown', 'olive', 'green'],
+  'orange':    ['navy', 'white', 'brown', 'cream', 'grey', 'olive', 'black'],
+  'teal':      ['white', 'black', 'grey', 'navy', 'tan', 'cream', 'coral'],
+  'coral':     ['navy', 'white', 'cream', 'grey', 'tan', 'teal', 'black'],
+  'lavender':  ['grey', 'white', 'navy', 'black', 'cream', 'pink'],
+  'maroon':    ['navy', 'cream', 'white', 'grey', 'tan', 'olive'],
+  'denim':     ['white', 'black', 'grey', 'cream', 'red', 'navy', 'tan', 'olive'],
+  'charcoal':  ['white', 'cream', 'navy', 'pink', 'red', 'blue', 'burgundy', 'tan', 'olive'],
 }
 
-// Formality levels in ascending order
+// Colour aliases for fuzzy matching
+const COLOUR_ALIASES: Record<string, string> = {
+  'light blue': 'blue', 'dark blue': 'navy', 'navy blue': 'navy',
+  'olive green': 'olive', 'army green': 'olive', 'forest green': 'green',
+  'light pink': 'pink', 'hot pink': 'pink', 'dusty pink': 'pink',
+  'light grey': 'grey', 'dark grey': 'charcoal', 'heather grey': 'grey',
+  'off white': 'cream', 'off-white': 'cream', 'ivory': 'cream', 'wine': 'burgundy',
+  'dark red': 'burgundy', 'maroon': 'maroon', 'mustard': 'yellow',
+  'dark brown': 'brown', 'light brown': 'tan', 'chocolate': 'brown',
+  'mint': 'green', 'mint green': 'green', 'sage': 'olive', 'sage green': 'olive',
+  'baby blue': 'blue', 'sky blue': 'blue', 'royal blue': 'navy',
+  'dark green': 'green', 'emerald': 'green', 'lime': 'green',
+  'light yellow': 'yellow', 'gold': 'yellow',
+  'camel': 'tan', 'khaki': 'olive', 'taupe': 'brown',
+  'fuchsia': 'pink', 'magenta': 'pink', 'rose': 'pink',
+  'aqua': 'teal', 'turquoise': 'teal', 'cyan': 'teal',
+  'lilac': 'lavender', 'purple': 'lavender', 'mauve': 'lavender',
+  'silver': 'grey', 'gold': 'yellow', 'bronze': 'brown',
+  'denim blue': 'denim', 'light wash denim': 'denim', 'dark denim': 'denim',
+}
+
 const FORMALITY_ORDER = ['casual', 'smart_casual', 'business_casual', 'formal', 'black_tie']
 
-// Occasion to formality mapping
 const OCCASION_FORMALITY: Record<string, string[]> = {
   'casual': ['casual', 'smart_casual'],
   'work': ['smart_casual', 'business_casual', 'formal'],
@@ -52,7 +82,6 @@ const OCCASION_FORMALITY: Record<string, string[]> = {
   'active': ['casual'],
 }
 
-// Current season helper
 function getCurrentSeason(): string {
   const month = new Date().getMonth() + 1
   if (month >= 3 && month <= 5) return 'spring'
@@ -65,21 +94,30 @@ function normalizeColour(colour: string): string {
   return colour.toLowerCase().trim()
 }
 
+// Resolve a colour to its canonical name via aliases, then to the base key
+function resolveColour(colour: string): string {
+  const normalized = normalizeColour(colour)
+  const aliased = COLOUR_ALIASES[normalized]
+  return aliased || normalized
+}
+
 function areColoursHarmonious(colour1: string, colour2: string): boolean {
-  const c1 = normalizeColour(colour1)
-  const c2 = normalizeColour(colour2)
-  
-  if (c1 === c2) return true // Monochromatic is fine
-  
+  const c1 = resolveColour(colour1)
+  const c2 = resolveColour(colour2)
+
+  if (c1 === c2) return true
+
   const harmonious = COLOUR_HARMONY[c1] || []
-  return harmonious.some(c => c2.includes(c) || c.includes(c2))
+  // Fuzzy: check both exact and substring matching
+  return harmonious.some(c =>
+    c2 === c || c2.includes(c) || c.includes(c2)
+  )
 }
 
 function hasPatternConflict(patterns: string[]): boolean {
   const nonSolid = patterns.filter(p => p !== 'solid')
-  if (nonSolid.length <= 1) return false // One pattern + solids = OK
-  
-  // Multiple non-solid patterns: check if they're compatible
+  if (nonSolid.length <= 1) return false
+
   const patternSet = new Set(nonSolid)
   if (patternSet.has('striped') && patternSet.has('checked')) return true
   if (patternSet.has('floral') && patternSet.has('graphic')) return true
@@ -99,199 +137,244 @@ export function generateValidOutfits(
   items: Item[],
   profile: UserProfile,
   occasion: string,
-  skipDirty: boolean = true   // skip dirty items by default (per D-04)
+  skipDirty: boolean = true
 ) {
   const currentSeason = getCurrentSeason()
-  
-  // Step 1: Filter by season and formality
-  let filtered = items.filter(item => 
-    matchesSeason(item.season, currentSeason) &&
-    isInFormalityRange(item.formalityLevel, occasion)
-  )
 
-  // Step 1.5: Filter out dirty items (unless overridden)
-  if (skipDirty) {
-    filtered = filtered.filter(item => item.isClean !== false)
-  }
+  // Filter out archived + dirty items
+  let filtered = items.filter(item => {
+    if (skipDirty && item.isClean === false) return false
+    if (profile.dislikedColours?.length) {
+      const itemColour = normalizeColour(item.colour)
+      if (profile.dislikedColours.some(d => itemColour.includes(normalizeColour(d)))) return false
+    }
+    return true
+  })
 
-  // Step 2: Filter out disliked colours
-  if (profile.dislikedColours?.length) {
-    filtered = filtered.filter(item =>
-      !profile.dislikedColours!.some(disliked =>
-        normalizeColour(item.colour).includes(normalizeColour(disliked))
-      )
-    )
-  }
-
-  // Step 3: Group by category
+  // Category groups
   const tops = filtered.filter(i => ['t-shirt', 'shirt', 'blouse', 'sweater', 'hoodie'].includes(i.clothingType))
   const bottoms = filtered.filter(i => ['jeans', 'trousers', 'shorts', 'skirt'].includes(i.clothingType))
   const outerwear = filtered.filter(i => ['jacket', 'coat'].includes(i.clothingType))
   const shoes = filtered.filter(i => ['shoes'].includes(i.clothingType))
   const fullBody = filtered.filter(i => ['dress'].includes(i.clothingType))
 
+  // Generate with progressive relaxation
+  let outfits = generateCore(tops, bottoms, fullBody, outerwear, shoes, profile, occasion, currentSeason, false)
+
+  // If too few, relax: skip season filter
+  if (outfits.length < 5) {
+    const allTops = filtered.filter(i => isInFormalityRange(i.formalityLevel, occasion) && ['t-shirt', 'shirt', 'blouse', 'sweater', 'hoodie'].includes(i.clothingType))
+    const allBottoms = filtered.filter(i => isInFormalityRange(i.formalityLevel, occasion) && ['jeans', 'trousers', 'shorts', 'skirt'].includes(i.clothingType))
+    const allOuterwear = filtered.filter(i => isInFormalityRange(i.formalityLevel, occasion) && ['jacket', 'coat'].includes(i.clothingType))
+    const allShoes = filtered.filter(i => isInFormalityRange(i.formalityLevel, occasion) && ['shoes'].includes(i.clothingType))
+    const allDresses = filtered.filter(i => isInFormalityRange(i.formalityLevel, occasion) && ['dress'].includes(i.clothingType))
+
+    const relaxed = generateCore(allTops, allBottoms, allDresses, allOuterwear, allShoes, profile, occasion, currentSeason, true)
+    outfits.push(...relaxed)
+  }
+
+  // If still too few, relax formality too
+  if (outfits.length < 5) {
+    const anyTops = filtered.filter(i => ['t-shirt', 'shirt', 'blouse', 'sweater', 'hoodie'].includes(i.clothingType))
+    const anyBottoms = filtered.filter(i => ['jeans', 'trousers', 'shorts', 'skirt'].includes(i.clothingType))
+    const anyOuter = filtered.filter(i => ['jacket', 'coat'].includes(i.clothingType))
+    const anyShoes = filtered.filter(i => ['shoes'].includes(i.clothingType))
+    const anyDresses = filtered.filter(i => ['dress'].includes(i.clothingType))
+
+    const ultraRelaxed = generateCore(anyTops, anyBottoms, anyDresses, anyOuter, anyShoes, profile, occasion, currentSeason, true)
+    outfits.push(...ultraRelaxed)
+  }
+
+  // Deduplicate by item IDs
+  const seen = new Set<string>()
+  const unique = outfits.filter(o => {
+    const key = [...o.items].map(i => i.id).sort().join(',')
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+
+  return unique
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 20)
+    .map(o => o.items)
+}
+
+function generateCore(
+  tops: Item[],
+  bottoms: Item[],
+  fullBody: Item[],
+  outerwear: Item[],
+  shoes: Item[],
+  profile: UserProfile,
+  occasion: string,
+  currentSeason: string,
+  relaxed: boolean,
+): { items: Item[]; score: number }[] {
   const outfits: { items: Item[]; score: number }[] = []
 
-  // Generate combinations: (top + bottom) OR (dress) + optional outerwear + optional shoes
+  // Apply season filter unless relaxed
+  const topPool = relaxed ? tops : tops.filter(i => matchesSeason(i.season, currentSeason))
+  const bottomPool = relaxed ? bottoms : bottoms.filter(i => matchesSeason(i.season, currentSeason))
+  const dressPool = relaxed ? fullBody : fullBody.filter(i => matchesSeason(i.season, currentSeason))
+  const outerPool = relaxed ? outerwear : outerwear.filter(i => matchesSeason(i.season, currentSeason))
+  const shoePool = relaxed ? shoes : shoes.filter(i => matchesSeason(i.season, currentSeason))
+
   const baseCombinations: Item[][] = []
 
-  for (const top of tops) {
-    for (const bottom of bottoms) {
+  for (const top of topPool) {
+    for (const bottom of bottomPool) {
       baseCombinations.push([top, bottom])
     }
   }
-
-  for (const dress of fullBody) {
+  for (const dress of dressPool) {
     baseCombinations.push([dress])
   }
 
+  if (baseCombinations.length === 0) return outfits
+
   for (const base of baseCombinations) {
-    const baseColours = base.map(i => normalizeColour(i.colour))
+    const baseColours = base.map(i => resolveColour(i.colour))
     const basePatterns = base.map(i => i.pattern)
 
-    // Check colour harmony within base
-    let baseHarmonious = true
-    for (let i = 0; i < baseColours.length; i++) {
-      for (let j = i + 1; j < baseColours.length; j++) {
-        if (!areColoursHarmonious(baseColours[i], baseColours[j])) {
-          baseHarmonious = false
-          break
+    // Colour harmony — strict unless relaxed
+    if (!relaxed || baseCombinations.length > 30) {
+      let baseHarmonious = true
+      for (let i = 0; i < baseColours.length; i++) {
+        for (let j = i + 1; j < baseColours.length; j++) {
+          if (!areColoursHarmonious(baseColours[i], baseColours[j])) {
+            baseHarmonious = false
+            break
+          }
         }
       }
-      if (!baseHarmonious) break
+      if (!baseHarmonious) continue
     }
-    if (!baseHarmonious) continue
 
-    // Check pattern conflicts
     if (hasPatternConflict(basePatterns)) continue
 
-    // Calculate score based on user preferences
-    let score = 0
+    let baseScore = calculateBaseScore(base, profile)
 
-    // Boost for preferred colours
-    if (profile.preferredColours?.length) {
-      for (const item of base) {
-        if (profile.preferredColours.some(pc =>
-          normalizeColour(item.colour).includes(normalizeColour(pc))
-        )) {
-          score += 2
-        }
+    // Relaxed mode penalty — demote these combos slightly
+    if (relaxed) baseScore -= 3
+
+    // ---- PATH 1: Base + shoes ----
+    const matchingShoes = shoePool.filter(s => base.every(i => areColoursHarmonious(i.colour, s.colour)))
+    if (matchingShoes.length > 0) {
+      for (const shoe of matchingShoes.slice(0, 3)) {
+        let shoeScore = baseScore + 3 // bonus for completeness
+        shoeScore += itemModifier(shoe, profile)
+        if (relaxed) shoeScore -= 2
+        outfits.push({ items: [...base, shoe], score: shoeScore })
       }
-    }
-
-    // Penalize recently worn items (deprioritize, don't exclude)
-    if (profile.recentlyWornItemIds?.length) {
-      for (const item of base) {
-        if (profile.recentlyWornItemIds.includes(item.id)) {
-          score -= 5
-        }
-      }
-    }
-
-    // Condition penalty: deprioritize worn or damaged items (per D-08)
-    for (const item of base) {
-      if (item.condition === 'worn') {
-        score -= 2
-      } else if (item.condition === 'needs_repair') {
-        score -= 2
-      } else if (item.condition === 'new') {
-        score += 1
-      }
-    }
-
-    // Temperature-based scoring bonus (D-03 per CONTEXT.md)
-    // Uses feels-like temperature. Scoring modifier, not hard filter.
-    if (profile.currentTemperature !== undefined) {
-      const temp = profile.currentTemperature
-
-      if (temp < 50) {
-        // Cold: boost warm layers, penalize light clothing
-        for (const item of base) {
-          if (['coat', 'jacket', 'sweater', 'hoodie'].includes(item.clothingType)) {
-            score += 3
-          }
-          if (['shorts', 't-shirt'].includes(item.clothingType)) {
-            score -= 3
-          }
-        }
-      } else if (temp > 70) {
-        // Warm: boost light fabrics, penalize heavy layers
-        for (const item of base) {
-          if (['t-shirt', 'shorts', 'skirt'].includes(item.clothingType)) {
-            score += 3
-          }
-          if (['coat', 'sweater', 'hoodie'].includes(item.clothingType)) {
-            score -= 3
-          }
-        }
-      } else {
-        // Mild (50-70°F): small flexibility bonus for all items
-        score += 1
-      }
-    }
-
-    // Add optional outerwear that matches
-    for (const ow of outerwear) {
-      if (baseColours.every(c => areColoursHarmonious(c, ow.colour))) {
-        const combo = [...base, ow]
-        const patterns = combo.map(i => i.pattern)
-        if (!hasPatternConflict(patterns)) {
-          let comboScore = score + 1 // small bonus for layering
-
-          // Penalize recently worn outerwear
-          if (profile.recentlyWornItemIds?.includes(ow.id)) {
-            comboScore -= 5
-          }
-
-          // Condition penalty for outerwear
-          if (ow.condition === 'worn' || ow.condition === 'needs_repair') {
-            comboScore -= 2
-          } else if (ow.condition === 'new') {
-            comboScore += 1
-          }
-
-          // Temperature scoring for outerwear
-          if (profile.currentTemperature !== undefined) {
-            const temp = profile.currentTemperature
-            if (temp < 50 && ['coat', 'jacket', 'sweater', 'hoodie'].includes(ow.clothingType)) {
-              comboScore += 3  // bonus for warm outerwear in cold
-            } else if (temp > 70 && ['coat', 'sweater', 'hoodie'].includes(ow.clothingType)) {
-              comboScore -= 3  // penalty for heavy outerwear in heat
-            }
-          }
-
-          // Add shoes
-          for (const shoe of shoes) {
-            if (combo.every(item => areColoursHarmonious(item.colour, shoe.colour))) {
-              let finalScore = comboScore + 1
-              if (profile.recentlyWornItemIds?.includes(shoe.id)) {
-                finalScore -= 5
-              }
-              outfits.push({ items: [...combo, shoe], score: finalScore })
-            }
-          }
-        }
-      }
-    }
-
-    // Also add without outerwear
-    for (const shoe of shoes) {
-      if (base.every(item => areColoursHarmonious(item.colour, shoe.colour))) {
-        let shoeScore = score + 1
-        if (profile.recentlyWornItemIds?.includes(shoe.id)) {
-          shoeScore -= 5
-        }
+    } else if (shoePool.length > 0) {
+      // No colour-match shoe — still offer without colour bonus
+      for (const shoe of shoePool.slice(0, 2)) {
+        let shoeScore = baseScore + 1 // smaller bonus since colour doesn't match
+        shoeScore += itemModifier(shoe, profile)
+        if (relaxed) shoeScore -= 2
         outfits.push({ items: [...base, shoe], score: shoeScore })
       }
     }
 
-    // And base only (no shoes/outerwear)
-    outfits.push({ items: base, score })
+    // ---- PATH 2: Base + outerwear + shoes ----
+    const matchingOuter = outerPool.filter(o => base.every(i => areColoursHarmonious(i.colour, o.colour)))
+    for (const ow of matchingOuter.slice(0, 2)) {
+      const comboItems = [...base, ow]
+      const allColours = [...baseColours, resolveColour(ow.colour)]
+      const comboPatterns = [...basePatterns, ow.pattern]
+
+      if (hasPatternConflict(comboPatterns)) continue
+
+      let outerScore = baseScore + 2 // layering bonus
+      outerScore += itemModifier(ow, profile)
+      if (relaxed) outerScore -= 3
+
+      // Temperature: bonus for outerwear in cold, penalty in hot
+      if (profile.currentTemperature !== undefined) {
+        if (profile.currentTemperature < 50 && ['coat', 'jacket', 'sweater'].includes(ow.clothingType)) {
+          outerScore += 3
+        } else if (profile.currentTemperature > 75 && ['coat', 'sweater', 'hoodie'].includes(ow.clothingType)) {
+          outerScore -= 3
+        }
+      }
+
+      const matchingOWshoes = shoePool.filter(s => areColoursHarmonious(s.colour, ow.colour))
+      if (matchingOWshoes.length > 0) {
+        for (const shoe of matchingOWshoes.slice(0, 2)) {
+          let finalScore = outerScore + 2
+          finalScore += itemModifier(shoe, profile)
+          if (relaxed) finalScore -= 1
+          outfits.push({ items: [...comboItems, shoe], score: finalScore })
+        }
+      }
+    }
+
+    // ---- PATH 3: Base only (no shoes, no outerwear) ----
+    outfits.push({ items: base, score: baseScore - 2 }) // small penalty for incomplete outfit
   }
 
-  // Sort by score descending and return top candidates
   return outfits
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 20)
-    .map(o => o.items)
+}
+
+function calculateBaseScore(base: Item[], profile: UserProfile): number {
+  let score = 0
+
+  for (const item of base) {
+    score += itemModifier(item, profile)
+
+    // Preferred colours bonus
+    if (profile.preferredColours?.length) {
+      const itemColour = normalizeColour(item.colour)
+      if (profile.preferredColours.some(pc => itemColour.includes(normalizeColour(pc)))) {
+        score += 2
+      }
+    }
+
+    // Wear recency penalty
+    if (profile.recentlyWornItemIds?.includes(item.id)) {
+      score -= 5
+    }
+  }
+
+  // Temperature scoring — milder, applied once to the base
+  if (profile.currentTemperature !== undefined) {
+    const temp = profile.currentTemperature
+    for (const item of base) {
+      if (temp < 50 && ['coat', 'jacket', 'sweater', 'hoodie'].includes(item.clothingType)) {
+        score += 2
+      } else if (temp > 75 && ['shorts', 'skirt'].includes(item.clothingType)) {
+        score += 2
+      } else if (temp > 75 && ['coat', 'sweater', 'hoodie'].includes(item.clothingType)) {
+        score -= 2
+      }
+    }
+  }
+
+  // Completeness bonus: outfit with top+bottom scores better than dress alone
+  if (base.length >= 2) score += 1
+
+  return score
+}
+
+function itemModifier(item: Item, profile: UserProfile): number {
+  let mod = 0
+
+  // Condition scoring
+  if (item.condition === 'worn' || item.condition === 'needs_repair') {
+    mod -= 2
+  } else if (item.condition === 'new') {
+    mod += 1
+  }
+
+  // Highly versatile neutral colours get a small boost
+  const neutralColours = ['black', 'white', 'grey', 'navy', 'cream', 'beige', 'tan', 'brown', 'denim']
+  if (neutralColours.includes(resolveColour(item.colour))) {
+    mod += 1
+  }
+
+  // Solid items are more versatile
+  if (item.pattern === 'solid') mod += 1
+
+  return mod
 }
