@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from 'vue'
-import { useFileDialog } from '@vueuse/core'
 
 const router = useRouter()
 const wardrobeStore = useWardrobeStore()
@@ -29,6 +28,7 @@ interface UploadItem {
   result?: AnalysisResult
   saved?: boolean
   error?: string
+  retries?: number
 }
 
 function fetchErrorMessage(err: unknown): string {
@@ -83,48 +83,61 @@ function statusLabel(item: UploadItem): string {
   }
 }
 
-const { files, open, reset } = useFileDialog({
-  accept: 'image/*',
-  multiple: true,
-  capture: 'environment',
-})
-
 const uploadItems = ref<UploadItem[]>([])
 const processing = ref(false)
 const progressLabel = ref('')
 const uploadKey = ref(0)
+const fileInput = ref<HTMLInputElement | null>(null)
 
 let idCounter = 0
 
-function handleCapture() {
-  open()
+function triggerCapture() {
+  fileInput.value?.click()
 }
 
-async function onFilesSelected() {
-  if (!files.value || files.value.length === 0) return
+async function handleFiles(files: FileList | null) {
+  if (!files || files.length === 0) return
 
-  const newFiles = Array.from(files.value)
-  reset()
+  const newFiles = Array.from(files).filter(f => f.size > 0)
 
-  const items = await Promise.all(newFiles.map(async file => {
-    const compressed = await compressImage(file)
-    return {
-      id: ++idCounter,
-      file: new File([compressed], file.name.replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' }),
-      preview: URL.createObjectURL(compressed),
-      status: 'pending' as const,
+  if (newFiles.length === 0) return
+
+  // Clear input so re-selecting the same file works
+  if (fileInput.value) fileInput.value.value = ''
+
+  const items: UploadItem[] = []
+  for (const file of newFiles) {
+    try {
+      const compressed = await compressImage(file)
+      items.push({
+        id: ++idCounter,
+        file: new File([compressed], file.name.replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' }),
+        preview: URL.createObjectURL(compressed),
+        status: 'pending' as const,
+      })
+    } catch {
+      items.push({
+        id: ++idCounter,
+        file: file,
+        preview: URL.createObjectURL(file),
+        status: 'pending' as const,
+      })
     }
-  }))
+  }
 
   uploadItems.value = [...uploadItems.value, ...items]
   uploadKey.value++
-  await nextTick()
 
-  // Auto-analyze new items immediately
-  const newPending = items.filter(i => i.status === 'pending')
-  if (newPending.length > 0) {
-    await analyzeItems()
-  }
+  // Force DOM update on mobile — double nextTick + rAF
+  await nextTick()
+  await nextTick()
+  await new Promise(r => requestAnimationFrame(r))
+
+  // Small delay to let mobile browser finish camera write + blob URL resolve
+  await new Promise(r => setTimeout(r, 300))
+
+  // Auto-analyze
+  analyzeItems()
 }
 
 const hasPendingItems = computed(() =>
@@ -138,23 +151,35 @@ const canSaveToWardrobe = computed(() =>
 const doneCount = computed(() => uploadItems.value.filter(i => i.status === 'done').length)
 
 async function analyzeItems() {
+  if (processing.value) return
   processing.value = true
-  const pending = uploadItems.value.filter(i => i.status === 'pending' || i.status === 'error')
-  const total = pending.length
 
-  // Process in parallel batches of 2
+  const pending = uploadItems.value.filter(i => i.status === 'pending' || i.status === 'error')
+  if (pending.length === 0) {
+    processing.value = false
+    return
+  }
+
+  const total = pending.length
   const BATCH_SIZE = 2
+
   for (let i = 0; i < pending.length; i += BATCH_SIZE) {
     const batch = pending.slice(i, i + BATCH_SIZE)
-    const doneSoFar = uploadItems.value.filter(i => i.status === 'done').length + i
+    const doneSoFar = uploadItems.value.filter(i => i.status === 'done').length
+    const batchStart = doneSoFar + (i > 0 ? batch[0] && batch === pending.slice(i) ? i : i) : doneSoFar
 
     await Promise.all(batch.map(async (item) => {
+      if (item.status !== 'pending' && item.status !== 'error') return
+
       item.status = 'uploading'
       item.error = undefined
       item.saved = false
+      item.retries = (item.retries || 0) + 1
 
       try {
-        progressLabel.value = `Uploading ${doneSoFar + 1}/${total + doneCount.value}...`
+        const idx = uploadItems.value.indexOf(item)
+        progressLabel.value = `Uploading ${idx + 1}/${uploadItems.value.length}...`
+
         const formData = new FormData()
         formData.append('file', item.file, item.file.name)
 
@@ -165,7 +190,7 @@ async function analyzeItems() {
 
         item.imageUrl = uploadRes.imageUrl
         item.status = 'analyzing'
-        progressLabel.value = `Analyzing ${doneSoFar + 1}/${total + doneCount.value}...`
+        progressLabel.value = `Analyzing ${idx + 1}/${uploadItems.value.length}...`
 
         const analyzeRes = await $fetch<AnalysisResult>('/api/wardrobe/analyze', {
           method: 'POST',
@@ -183,6 +208,13 @@ async function analyzeItems() {
 
   progressLabel.value = ''
   processing.value = false
+}
+
+async function retryItem(item: UploadItem) {
+  item.status = 'pending'
+  item.error = undefined
+  item.retries = 0
+  await analyzeItems()
 }
 
 async function saveToWardrobe() {
@@ -219,14 +251,6 @@ async function saveToWardrobe() {
   router.push('/wardrobe')
 }
 
-async function handlePrimaryAction() {
-  if (canSaveToWardrobe.value) {
-    await saveToWardrobe()
-    return
-  }
-  await analyzeItems()
-}
-
 function removeItem(id: number) {
   const idx = uploadItems.value.findIndex(i => i.id === id)
   if (idx === -1) return
@@ -241,23 +265,28 @@ onUnmounted(() => {
     if (item.preview) URL.revokeObjectURL(item.preview)
   }
 })
-
-watch(files, () => {
-  if (files.value && files.value.length > 0) {
-    onFilesSelected()
-  }
-}, { flush: 'post' })
 </script>
 
 <template>
   <div>
+    <!-- Hidden native file input — more reliable than useFileDialog on mobile -->
+    <input
+      ref="fileInput"
+      type="file"
+      accept="image/*"
+      multiple
+      capture="environment"
+      class="hidden"
+      @change="handleFiles(($event.target as HTMLInputElement).files)"
+    />
+
     <h1 class="text-2xl font-bold text-brand-950 mb-6">Add Clothing</h1>
 
     <!-- Upload area -->
     <div v-if="uploadItems.length === 0">
       <button
-        @click="handleCapture"
-        class="w-full rounded-lg border-2 border-dashed border-brand-300 py-20 text-center hover:border-brand-400 hover:bg-brand-50 transition"
+        @click="triggerCapture"
+        class="w-full rounded-lg border-2 border-dashed border-brand-300 py-20 text-center hover:border-brand-400 hover:bg-brand-50 transition active:bg-brand-100"
       >
         <div class="text-4xl mb-2">📸</div>
         <p class="text-brand-700 font-medium">Tap to take a photo</p>
@@ -267,15 +296,15 @@ watch(files, () => {
 
     <!-- Progress bar -->
     <div
-      v-if="processing && doneCount > 0"
+      v-if="processing"
       class="mb-4 rounded-lg bg-brand-50 px-4 py-2 flex items-center gap-3"
     >
-      <span class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-brand-200 border-t-brand-600" />
+      <span class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-brand-200 border-t-brand-600 shrink-0" />
       <span class="text-sm text-brand-700">{{ progressLabel || 'Processing...' }}</span>
     </div>
 
     <!-- Preview & results -->
-    <div v-else class="space-y-4">
+    <div v-if="uploadItems.length > 0" class="space-y-4">
       <div
         v-for="item in uploadItems"
         :key="item.id"
@@ -310,6 +339,18 @@ watch(files, () => {
           </button>
         </div>
 
+        <!-- Error with retry -->
+        <div v-if="item.status === 'error'" class="mt-3 flex items-center gap-2">
+          <button
+            @click="retryItem(item)"
+            class="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-100 transition"
+          >
+            Retry
+          </button>
+          <span class="text-xs text-red-500">{{ item.error }}</span>
+        </div>
+
+        <!-- Analysis results form -->
         <div v-if="item.status === 'done' && item.result" class="mt-4 grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-medium text-brand-600">Type</label>
@@ -359,25 +400,19 @@ watch(files, () => {
 
       <div class="flex gap-3">
         <button
-          @click="handleCapture"
-          class="flex-1 rounded-lg border border-brand-300 py-3 text-sm font-medium text-brand-700 hover:bg-brand-50 transition"
+          @click="triggerCapture"
+          :disabled="processing"
+          class="flex-1 rounded-lg border border-brand-300 py-3 text-sm font-medium text-brand-700 hover:bg-brand-50 transition disabled:opacity-50"
         >
           + Add More
         </button>
         <button
-          @click="handlePrimaryAction"
-          :disabled="processing || (!hasPendingItems && !canSaveToWardrobe)"
+          v-if="canSaveToWardrobe"
+          @click="saveToWardrobe"
+          :disabled="processing"
           class="flex-1 rounded-lg bg-brand-600 py-3 text-sm font-medium text-white hover:bg-brand-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {{
-            processing
-              ? 'Processing...'
-              : canSaveToWardrobe
-                ? 'Save to Wardrobe'
-                : hasPendingItems
-                  ? `Analyze Photos${uploadItems.filter(i => i.status === 'pending' || i.status === 'error').length > 1 ? ` (${uploadItems.filter(i => i.status === 'pending' || i.status === 'error').length})` : ''}`
-                  : 'Saved'
-          }}
+          {{ processing ? 'Saving...' : 'Save to Wardrobe' }}
         </button>
       </div>
     </div>
