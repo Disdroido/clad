@@ -12,6 +12,9 @@ const activeTab = computed(() => {
 const wardrobeStore = useWardrobeStore()
 const pendingUploads = usePendingUploads()
 
+const safeItems = computed(() => (wardrobeStore.items || []).filter(Boolean))
+const safePending = computed(() => (pendingUploads.items || []).filter(Boolean))
+
 onMounted(() => wardrobeStore.fetchItems())
 
 function conditionLabel(condition: string): string {
@@ -66,7 +69,7 @@ function conditionLabel(condition: string): string {
       <span class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-brand-200 border-t-brand-600" />
     </div>
 
-    <div v-else-if="wardrobeStore.items.length === 0 && pendingUploads.items.length === 0" class="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-brand-200 py-20">
+    <div v-else-if="safeItems.length === 0 && safePending.length === 0" class="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-brand-200 py-20">
       <p class="mb-4 text-brand-500">Your wardrobe is empty</p>
       <NuxtLink
         to="/wardrobe/upload"
@@ -79,7 +82,7 @@ function conditionLabel(condition: string): string {
     <div v-else class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
       <!-- Pending upload skeletons -->
       <div
-        v-for="pending in pendingUploads.items"
+        v-for="pending in safePending"
         :key="pending.id"
         class="overflow-hidden rounded-lg bg-white shadow animate-pulse"
       >
@@ -93,7 +96,7 @@ function conditionLabel(condition: string): string {
       </div>
 
       <NuxtLink
-        v-for="item in wardrobeStore.items"
+        v-for="item in safeItems"
         :key="item.id"
         :to="`/wardrobe/items/${item.id}`"
         :class="[

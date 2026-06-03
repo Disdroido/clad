@@ -10,8 +10,10 @@ export const useWardrobeStore = defineStore('wardrobe', () => {
     loading.value = true
     try {
       const data: any = await $fetch('/api/wardrobe/items')
-      items.value = data.items ?? []
+      items.value = (Array.isArray(data?.items) ? data.items : []).filter(Boolean)
       loaded.value = true
+    } catch {
+      items.value = items.value.length ? items.value : []
     } finally {
       loading.value = false
     }
