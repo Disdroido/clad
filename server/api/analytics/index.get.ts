@@ -61,7 +61,8 @@ export default defineEventHandler(async (event) => {
   // Fetch full item details
   const itemIds = topEntries.map(e => e.itemId)
   const items = itemIds.length > 0
-    ? await db.select().from(wardrobeItems).where(inArray(wardrobeItems.id, itemIds))
+    ? (await db.select().from(wardrobeItems).where(inArray(wardrobeItems.id, itemIds)))
+        .map(item => ({ ...item, condition: item.condition ?? 'good', isClean: item.isClean ?? true }))
     : []
   const itemsMap = Object.fromEntries(items.map(i => [i.id, i]))
 
