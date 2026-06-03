@@ -1,103 +1,79 @@
 <script setup lang="ts">
-import { ref, nextTick } from 'vue'
+import { ref } from 'vue'
 
 const router = useRouter()
 const wardrobeStore = useWardrobeStore()
 const insightsStore = useInsightsStore()
+const pendingUploads = usePendingUploads()
 
 definePageMeta({ layout: 'default' })
 useHead({ title: 'Upload — Clad' })
 
-const uploading = ref(false)
-const statusLabel = ref('')
 const fileInput = ref<HTMLInputElement | null>(null)
 
 function triggerCapture() {
   fileInput.value?.click()
 }
 
-async function compressImage(file: File, maxDimension = 1024, quality = 0.8): Promise<Blob> {
-  const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-    const img = new Image()
-    img.onload = () => resolve(img)
-    img.onerror = reject
-    img.src = URL.createObjectURL(file)
-  })
+async function processFile(file: File) {
+  try {
+    const formData = new FormData()
+    formData.append('file', file, file.name)
+    const uploadRes = await fetch('/api/wardrobe/upload-image', {
+      method: 'POST',
+      body: formData,
+    }).then(r => r.json())
 
-  let { width, height } = img
-  if (width > maxDimension || height > maxDimension) {
-    const ratio = Math.min(maxDimension / width, maxDimension / height)
-    width = Math.round(width * ratio)
-    height = Math.round(height * ratio)
+    const analyzeRes = await fetch('/api/wardrobe/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imageUrl: uploadRes.imageUrl }),
+    }).then(r => r.json())
+
+    await fetch('/api/wardrobe/upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        imageUrl: uploadRes.imageUrl,
+        clothingType: analyzeRes.clothingType || 'other',
+        clothingSubType: analyzeRes.clothingSubType || null,
+        colour: analyzeRes.colour || 'unknown',
+        pattern: analyzeRes.pattern || 'solid',
+        material: analyzeRes.material || 'unknown',
+        formalityLevel: analyzeRes.formalityLevel || 'casual',
+        season: analyzeRes.season || 'all_season',
+        aiConfidence: analyzeRes.confidence || 0.5,
+      }),
+    })
+  } catch {
+    // Item can be re-added later
   }
 
-  const canvas = document.createElement('canvas')
-  canvas.width = width
-  canvas.height = height
-  const ctx = canvas.getContext('2d')!
-  ctx.drawImage(img, 0, 0, width, height)
-  URL.revokeObjectURL(img.src)
+  // Remove one pending placeholder — real item appears after re-fetch
+  const pending = pendingUploads.items.value[0]
+  if (pending) pendingUploads.remove(pending.id)
 
-  return new Promise(resolve => {
-    canvas.toBlob(blob => resolve(blob!), 'image/jpeg', quality)
-  })
+  // Force wardrobe refresh so the new item appears immediately
+  await wardrobeStore.fetchItems(true)
 }
 
 async function handleFiles(files: FileList | null) {
   if (!files || files.length === 0) return
-
   const validFiles = Array.from(files).filter(f => f.size > 0)
   if (validFiles.length === 0) return
 
-  // Clear input
   if (fileInput.value) fileInput.value.value = ''
 
-  uploading.value = true
+  // Add pending placeholders
+  pendingUploads.add(validFiles.length)
 
-  for (const file of validFiles) {
-    try {
-      statusLabel.value = 'Compressing...'
-      const compressed = await compressImage(file)
-      const jpegFile = new File([compressed], file.name.replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' })
-
-      statusLabel.value = 'Uploading...'
-      const formData = new FormData()
-      formData.append('file', jpegFile, jpegFile.name)
-      const uploadRes = await $fetch<{ imageUrl: string }>('/api/wardrobe/upload-image', {
-        method: 'POST',
-        body: formData,
-      })
-
-      statusLabel.value = 'Analyzing...'
-      const analyzeRes = await $fetch('/api/wardrobe/analyze', {
-        method: 'POST',
-        body: { imageUrl: uploadRes.imageUrl },
-      })
-
-      statusLabel.value = 'Saving...'
-      await $fetch('/api/wardrobe/upload', {
-        method: 'POST',
-        body: {
-          imageUrl: uploadRes.imageUrl,
-          clothingType: (analyzeRes as any).clothingType || 'other',
-          clothingSubType: (analyzeRes as any).clothingSubType || null,
-          colour: (analyzeRes as any).colour || 'unknown',
-          pattern: (analyzeRes as any).pattern || 'solid',
-          material: (analyzeRes as any).material || 'unknown',
-          formalityLevel: (analyzeRes as any).formalityLevel || 'casual',
-          season: (analyzeRes as any).season || 'all_season',
-          aiConfidence: (analyzeRes as any).confidence || 0.5,
-        },
-      })
-    } catch {
-      // Silently continue — user can edit the item later from wardrobe
-    }
-  }
-
-  uploading.value = false
-  wardrobeStore.invalidate()
-  insightsStore.invalidate()
+  // Navigate immediately — processing continues in background
   router.push('/wardrobe')
+
+  // Process all files in background
+  for (const file of validFiles) {
+    await processFile(file)
+  }
 }
 </script>
 
@@ -115,16 +91,7 @@ async function handleFiles(files: FileList | null) {
 
     <h1 class="text-2xl font-bold text-brand-950 mb-6">Add Clothing</h1>
 
-    <!-- Uploading state -->
-    <div v-if="uploading" class="flex flex-col items-center justify-center py-20">
-      <span class="inline-block mb-4 h-10 w-10 animate-spin rounded-full border-4 border-brand-200 border-t-brand-600" />
-      <p class="text-brand-700 font-medium">{{ statusLabel || 'Processing...' }}</p>
-      <p class="text-sm text-brand-400 mt-1">This will just take a moment</p>
-    </div>
-
-    <!-- Capture button -->
     <button
-      v-else
       @click="triggerCapture"
       class="w-full rounded-lg border-2 border-dashed border-brand-300 py-20 text-center hover:border-brand-400 hover:bg-brand-50 transition active:bg-brand-100"
     >
