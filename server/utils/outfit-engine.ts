@@ -137,7 +137,8 @@ export function generateValidOutfits(
   items: Item[],
   profile: UserProfile,
   occasion: string,
-  skipDirty: boolean = true
+  skipDirty: boolean = true,
+  existingCombinations: Set<string> = new Set(),
 ) {
   const currentSeason = getCurrentSeason()
 
@@ -185,11 +186,11 @@ export function generateValidOutfits(
     outfits.push(...ultraRelaxed)
   }
 
-  // Deduplicate by item IDs
+  // Deduplicate by item IDs + filter out existing combinations
   const seen = new Set<string>()
   const unique = outfits.filter(o => {
     const key = [...o.items].map(i => i.id).sort().join(',')
-    if (seen.has(key)) return false
+    if (seen.has(key) || existingCombinations.has(key)) return false
     seen.add(key)
     return true
   })

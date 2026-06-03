@@ -96,12 +96,34 @@ export default defineEventHandler(async (event) => {
     // ^ use feelsLike for clothing decisions (per research: "feels-like > actual temp")
   }
 
-  // 3. Stage 1: Deterministic pre-filter
+  // 3. Fetch existing outfits to prevent duplicates
+  let existingCombinations = new Set<string>()
+  try {
+    const existingOutfits = await db
+      .select({ itemIds: outfits.itemIds })
+      .from(outfits)
+      .where(
+        and(
+          eq(outfits.userId, userId),
+          eq(outfits.isArchived, false),
+        )
+      )
+    for (const o of existingOutfits) {
+      if (o.itemIds?.length) {
+        existingCombinations.add([...(o.itemIds as string[])].sort().join(','))
+      }
+    }
+  } catch {
+    // Non-critical — proceed without dedup
+  }
+
+  // 3.5. Stage 1: Deterministic pre-filter
   const candidates = generateValidOutfits(
     items,
     enrichedProfile,
     occasion,
-    !skipLaundry   // invert: skipLaundry=false → skipDirty=true (default behavior)
+    !skipLaundry,
+    existingCombinations,
   )
 
   if (candidates.length === 0) {
