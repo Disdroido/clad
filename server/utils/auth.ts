@@ -29,8 +29,8 @@ export function useAuth(event?: H3Event) {
       minPasswordLength: 8,
     },
     session: {
-      expiresIn: 60 * 60 * 24 * 30,
-      updateAge: 60 * 60 * 24,
+      expiresIn: 60 * 60 * 24 * 7,   // 1 week absolute max
+      updateAge: 60 * 60 * 24,       // refresh daily when active
     },
     trustedOrigins,
     advanced: {
